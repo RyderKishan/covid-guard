@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { useQuery } from 'react-query';
+
+import { get } from '../api';
 
 export const useWidth = () => {
   const theme = useTheme();
@@ -37,3 +40,11 @@ export const useLocalStorage = (key, initialValue) => {
   };
   return [storedValue, setValue];
 };
+
+export const useStates = () =>
+  useQuery('states', async () => {
+    const response = await get(
+      'https://cdn-api.co-vin.in/api/v2/admin/location/states'
+    );
+    return (response && response.states) || [];
+  });

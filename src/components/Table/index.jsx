@@ -234,7 +234,7 @@ const Table = (props) => {
                                 </div>
                                 <div className="sessions">
                                   {session.slots.map((slot) => (
-                                    <div>{slot}</div>
+                                    <div key={slot}>{slot}</div>
                                   ))}
                                 </div>
                               </SessionCard>

@@ -1,14 +1,6 @@
 import { useQuery } from 'react-query';
 import { get } from '../../api';
 
-export const useStates = () =>
-  useQuery('states', async () => {
-    const response = await get(
-      'https://cdn-api.co-vin.in/api/v2/admin/location/states'
-    );
-    return (response && response.states) || [];
-  });
-
 export const useDistricts = (stateId) =>
   useQuery(
     ['districts', stateId],

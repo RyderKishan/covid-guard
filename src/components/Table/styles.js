@@ -6,7 +6,8 @@ export const Paper = styled(MuiPaper)`
     display: flex;
     justify-content: space-between;
   }
-  & td, th {
+  & td,
+  th {
     white-space: nowrap;
   }
 `;

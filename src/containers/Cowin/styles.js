@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-export const AppContainer = styled.article`
+export const CowinContainer = styled.article`
   height: 100vh;
   width: 100vw;
 `;
@@ -32,8 +32,4 @@ export const Card = styled.div`
       flex: 1;
     }
   }
-`;
-
-export const Text = styled.div`
-  color: ${({ theme }) => theme.palette.text.primary};
 `;
