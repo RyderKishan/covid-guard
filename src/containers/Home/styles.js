@@ -15,3 +15,10 @@ export const Card = styled(MuiCard)`
   width: ${({ theme }) => theme.spacing(40)}px;
   padding: ${({ theme }) => theme.spacing(2)}px;
 `;
+
+export const Center = styled.div`
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-content: center;
+`;

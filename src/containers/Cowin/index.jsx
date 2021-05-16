@@ -13,9 +13,8 @@ import Checkbox from '@material-ui/core/Checkbox';
 import SearchIcon from '@material-ui/icons/Search';
 
 import { CowinContainer, MainSection, Card } from './styles';
-import { useCenters, useDistricts } from './hooks';
 import { columns } from './constants';
-import { useWidth, useStates } from '../../hooks';
+import { useWidth, useStates, useCenters, useDistricts } from '../../hooks';
 import Table from '../../components/Table';
 
 const Cowin = () => {
@@ -49,7 +48,6 @@ const Cowin = () => {
 
   return (
     <CowinContainer>
-      
       {(isLoadingCenters || isLoadingDistricts) && <LinearProgress />}
       <MainSection width={width}>
         <Card>
@@ -101,7 +99,6 @@ const Cowin = () => {
                     value={district}
                     onClick={() => {
                       selectDistrictIdToFetch(district.district_id);
-                      console.log('click', district);
                     }}
                   >
                     <Checkbox

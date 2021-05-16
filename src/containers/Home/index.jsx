@@ -1,25 +1,50 @@
 import React from 'react';
 import { Helmet } from 'react-helmet';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import qs from 'qs';
+import { useHistory } from 'react-router-dom';
 
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
 
-import { useStates } from '../../hooks';
-import { HomeContainer, Card } from './styles';
-import { columns, centersMock } from './constants';
+import { useStates, useSearchCenters } from '../../hooks';
+import { HomeContainer, Card, Center } from './styles';
+import { columns } from './constants';
 
 const Home = () => {
   const { data: states = [], isLoading: isLoadingStates } = useStates();
+  const {
+    data: centers = [],
+    mutate: searchCenters,
+    isLoadingCenters
+  } = useSearchCenters();
+  const {
+    location: { pathname },
+    push
+  } = useHistory();
   return (
     <HomeContainer>
       <Helmet>
         <title>Covid Guard</title>
       </Helmet>
       <div>
-        <Table rows={centersMock} columns={columns} />
+        <Table rows={centers} columns={columns} />
       </div>
       <Card>
-        <Filter states={states} isLoading={isLoadingStates} />
+        {isLoadingStates ? (
+          <Center>
+            <CircularProgress color="secondary" />
+          </Center>
+        ) : (
+          <Filter
+            states={states}
+            isLoading={isLoadingStates || isLoadingCenters}
+            onSearch={(f) => {
+              push(`${pathname}?${qs.stringify(f)}`);
+              searchCenters(f);
+            }}
+          />
+        )}
       </Card>
     </HomeContainer>
   );

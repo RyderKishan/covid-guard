@@ -16,6 +16,7 @@
     "camelcase": "warn",
     "no-console": "off",
     "no-unused-vars": "warn",
+    "react/forbid-prop-types": "off",
     "react/jsx-props-no-spreading": "off"
   }
 }

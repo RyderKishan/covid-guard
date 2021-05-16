@@ -164,7 +164,6 @@ const Table = (props) => {
                   <TableRow
                     hover
                     role="checkbox"
-                    onClick={(event) => console.log('event', event)}
                     key={row.id || row.center_id}
                   >
                     <TableCell align="center">
