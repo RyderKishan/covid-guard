@@ -1,10 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
-import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -20,11 +17,11 @@ import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
 
-import { Paper, DailySessions, SessionCard } from './styles';
+import { DailySessions, SessionCard, TableContainer } from './styles';
 import { stableSort, getSorting, getFiltering, getRows } from './utils';
 
 const Table = (props) => {
-  const { rows, columns, name, initialExpand, pageable, showFilter } = props;
+  const { rows, columns, initialExpand, pageable, showFilter } = props;
   const [modRows, setModRows] = React.useState(rows);
   const [collapsibleRows, setCollapsibleRows] = React.useState({});
   const [page, setPage] = React.useState(0);
@@ -84,16 +81,9 @@ const Table = (props) => {
   }, [rows]);
 
   return (
-    <Paper>
-      <Toolbar className="toolbar">
-        {name && (
-          <Typography variant="h6" id="tableTitle" component="div">
-            {name}
-          </Typography>
-        )}
-      </Toolbar>
+    <>
       <TableContainer>
-        <MuiTable>
+        <MuiTable stickyHeader padding="none">
           <TableHead>
             <TableRow>
               <TableCell align="center">
@@ -161,11 +151,7 @@ const Table = (props) => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => (
                 <React.Fragment key={row.center_id}>
-                  <TableRow
-                    hover
-                    role="checkbox"
-                    key={row.id || row.center_id}
-                  >
+                  <TableRow hover role="checkbox" key={row.id || row.center_id}>
                     <TableCell align="center">
                       <span>{index + 1}</span>
                     </TableCell>
@@ -247,19 +233,19 @@ const Table = (props) => {
               ))}
           </TableBody>
         </MuiTable>
-        {pageable && (
-          <TablePagination
-            rowsPerPageOptions={[7, 10, 20, 50, 100]}
-            component="div"
-            count={modRows.length}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onChangePage={(e, p) => setPage(p)}
-            onChangeRowsPerPage={(event) => setRowsPerPage(+event.target.value)}
-          />
-        )}
       </TableContainer>
-    </Paper>
+      {pageable && (
+        <TablePagination
+          rowsPerPageOptions={[7, 10, 20, 50, 100]}
+          component="div"
+          count={modRows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onChangePage={(e, p) => setPage(p)}
+          onChangeRowsPerPage={(event) => setRowsPerPage(+event.target.value)}
+        />
+      )}
+    </>
   );
 };
 
@@ -270,8 +256,7 @@ Table.defaultProps = {
   showFilter: true,
   pageable: true,
   initialExpand: false,
-  columns: [],
-  name: ''
+  columns: []
 };
 
 Table.propTypes = {
@@ -279,6 +264,5 @@ Table.propTypes = {
   showFilter: PropTypes.bool,
   pageable: PropTypes.bool,
   initialExpand: PropTypes.bool,
-  columns: PropTypes.arrayOf(PropTypes.shape({})),
-  name: PropTypes.string
+  columns: PropTypes.arrayOf(PropTypes.shape({}))
 };

@@ -1,51 +1,178 @@
 import React from 'react';
+// import qs from 'qs';
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
 import { Helmet } from 'react-helmet';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import qs from 'qs';
-import { useHistory } from 'react-router-dom';
+import Collapse from '@material-ui/core/Collapse';
+import LinearProgress from '@material-ui/core/LinearProgress';
+import Toolbar from '@material-ui/core/Toolbar';
+import IconButton from '@material-ui/core/IconButton';
+import FilterListIcon from '@material-ui/icons/FilterList';
+import SearchIcon from '@material-ui/icons/Search';
+import InputLabel from '@material-ui/core/InputLabel';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormHelperText from '@material-ui/core/FormHelperText';
+import FormControl from '@material-ui/core/FormControl';
+import Select from '@material-ui/core/Select';
+
+// import { useHistory } from 'react-router-dom';
 
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
+import DistrictSelect from '../../components/DistrictSelect';
 
 import { useStates, useSearchCenters } from '../../hooks';
-import { HomeContainer, Card, Center } from './styles';
-import { columns } from './constants';
+import {
+  filterCenters
+  // getFilterFromUrl,
+  // getSearchCriteriaFromUrl
+} from './utils';
+import { HomeContainer, Paper, SearchCriteriaFields } from './styles';
+import {
+  columns,
+  dateRanges,
+  defaultFilters,
+  defaultSearchCriteria
+} from './constants';
 
 const Home = () => {
+  // const {
+  //   location: { pathname, search },
+  //   push
+  // } = useHistory();
+
   const { data: states = [], isLoading: isLoadingStates } = useStates();
   const {
-    data: centers = [],
+    data: centers,
     mutate: searchCenters,
-    isLoadingCenters
+    isLoading: isLoadingCenters
   } = useSearchCenters();
-  const {
-    location: { pathname },
-    push
-  } = useHistory();
+
+  const [showFilter, toggleFilter] = React.useState(false);
+  const [filters, setFilters] = React.useState(defaultFilters);
+  const [
+    searchCriteria
+    // setSearchCriteria
+  ] = React.useState(defaultSearchCriteria);
+  const [filteredCenters, setFilteredCenters] = React.useState([]);
+
+  const onSearch = (newCriteria) => {
+    // push(
+    //   `${pathname}?${qs.stringify(
+    //     { ...filters, ...newCriteria },
+    //     {
+    //       encode: true
+    //     }
+    //   )}`
+    // );
+    searchCenters(newCriteria);
+  };
+
+  const onFilter = (f) => {
+    const filtered = filterCenters(centers, f);
+    setFilteredCenters(filtered);
+    setFilters(f);
+  };
+
+  const formik = useFormik({
+    validationSchema: Yup.object().shape({
+      state: Yup.number().required('State is required'),
+      district: Yup.number().required('District is required'),
+      dateRange: Yup.string().required('Date range is required')
+    }),
+    initialValues: searchCriteria,
+    onSubmit: onSearch
+  });
+
+  React.useEffect(() => {
+    const filtered = filterCenters(centers, filters);
+    setFilteredCenters(filtered);
+  }, [centers]);
+
   return (
     <HomeContainer>
       <Helmet>
         <title>Covid Guard</title>
       </Helmet>
-      <div>
-        <Table rows={centers} columns={columns} />
-      </div>
-      <Card>
-        {isLoadingStates ? (
-          <Center>
-            <CircularProgress color="secondary" />
-          </Center>
-        ) : (
+      <Paper>
+        {isLoadingStates && <LinearProgress />}
+        <Toolbar className="toolbar">
+          <SearchCriteriaFields>
+            <FormControl
+              error={Boolean(formik.submitCount > 0 && formik.errors.state)}
+            >
+              <InputLabel shrink id="state-label">
+                State
+              </InputLabel>
+              <Select
+                labelId="state-label"
+                id="state"
+                name="state"
+                value={formik.values.state}
+                onChange={(event) => {
+                  formik.handleChange(event);
+                  formik.setFieldValue('district', '', true);
+                }}
+                displayEmpty
+              >
+                {states.map(({ state_name: sN, state_id: sI }) => (
+                  <MenuItem key={sI} value={sI}>
+                    {sN}
+                  </MenuItem>
+                ))}
+              </Select>
+              {Boolean(formik.submitCount > 0 && formik.errors.state) && (
+                <FormHelperText>{formik.errors.state}</FormHelperText>
+              )}
+            </FormControl>
+            <DistrictSelect formik={formik} />
+            <FormControl
+              error={Boolean(formik.submitCount > 0 && formik.errors.dateRange)}
+            >
+              <InputLabel shrink id="dateRange-label">
+                Date Range
+              </InputLabel>
+              <Select
+                labelId="dateRange-label"
+                id="dateRange"
+                name="dateRange"
+                value={formik.values.dateRange}
+                onChange={(event) => {
+                  formik.handleChange(event);
+                }}
+                displayEmpty
+              >
+                {dateRanges.map(({ value, label }) => (
+                  <MenuItem key={value} value={value}>
+                    {label}
+                  </MenuItem>
+                ))}
+              </Select>
+              {Boolean(formik.submitCount > 0 && formik.errors.dateRange) && (
+                <FormHelperText>{formik.errors.dateRange}</FormHelperText>
+              )}
+            </FormControl>
+          </SearchCriteriaFields>
+          <div>
+            <IconButton onClick={formik.handleSubmit}>
+              <SearchIcon />
+            </IconButton>
+            <IconButton onClick={() => toggleFilter(!showFilter)}>
+              <FilterListIcon />
+            </IconButton>
+          </div>
+        </Toolbar>
+        <Collapse in={showFilter} timeout="auto" unmountOnExit>
           <Filter
-            states={states}
-            isLoading={isLoadingStates || isLoadingCenters}
-            onSearch={(f) => {
-              push(`${pathname}?${qs.stringify(f)}`);
-              searchCenters(f);
-            }}
+            formik={formik}
+            isLoading={isLoadingStates}
+            isFetching={isLoadingCenters}
+            filters={filters}
+            onFilter={onFilter}
           />
-        )}
-      </Card>
+        </Collapse>
+        <Table rows={filteredCenters} columns={columns} />
+      </Paper>
     </HomeContainer>
   );
 };

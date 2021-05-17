@@ -79,35 +79,12 @@ export const useCenters = (districtId) =>
 
 export const useSearchCenters = () =>
   useMutation(
-    async ({
-      minAgeLimit = [],
-      district = '',
-      date = '',
-      feeType = [],
-      dateRange = '',
-      vaccine = []
-    }) => {
+    async ({ district = '', dateRange = '' }) => {
       // const centers = centersMock;
       const { centers = [] } = await get(
         `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district}&date=${dateRange}`
       );
-      const filtered = centers
-        .filter((c) =>
-          feeType.length > 0 ? feeType.includes(c.fee_type) : true
-        )
-        .map((c) => {
-          const filteredSessions = (c.sessions || []).filter(
-            (s) =>
-              (date ? s.date === date : true) &&
-              (minAgeLimit.length > 0
-                ? minAgeLimit.includes(s.min_age_limit)
-                : true) &&
-              (vaccine.length > 0 ? vaccine.includes(s.vaccine) : true)
-          );
-          return { ...c, sessions: filteredSessions };
-        })
-        .filter((c) => c.sessions && c.sessions.length > 0);
-      return filtered;
+      return centers;
     },
     {
       onSuccess: (response) => response,

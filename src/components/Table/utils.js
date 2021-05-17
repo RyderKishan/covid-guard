@@ -39,7 +39,6 @@ const getFiltering = (array, filter) => {
       positiveFilters[key] = val;
     }
   }, filter);
-  console.log('array, filter, positiveFilters', array, filter, positiveFilters);
   if (isEmpty(positiveFilters) || isEmpty(filter)) return array;
   return array.filter((row) => checkIfMatches(row, filter));
 };

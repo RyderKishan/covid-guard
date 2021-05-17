@@ -1,22 +1,21 @@
 import styled from 'styled-components';
-import MuiPaper from '@material-ui/core/Paper';
 
-export const Paper = styled(MuiPaper)`
-  & > .toolbar {
-    display: flex;
-    justify-content: space-between;
-  }
-  & td,
-  th {
-    white-space: nowrap;
+export const TableContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  & > table {
+    flex: 1;
+    overflow: auto;
   }
 `;
 
 export const DailySessions = styled.div`
   min-height: ${({ theme }) => theme.spacing(4)}px;
-  padding: ${({ theme }) => theme.spacing(2)}px;
+  margin: ${({ theme }) => theme.spacing(2)}px;
   display: flex;
-  width: calc(100vw - 144px);
+  width: calc(100vw - ${({ theme }) => theme.spacing(8)}px);
   overflow: auto;
   & > :not(:last-child) {
     margin-right: ${({ theme }) => theme.spacing(4)}px;

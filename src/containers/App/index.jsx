@@ -33,6 +33,7 @@ const GlobalStyle = createGlobalStyle`
     height: 100vh;
     & > article {
       flex: 1;
+      overflow: auto;
       padding: ${({ theme }) => theme.spacing(2)}px;
     }
   }

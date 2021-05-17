@@ -1,23 +1,12 @@
 import moment from 'moment';
 
-const dateFormat = 'DD-MM-YYYY';
-const dateDisplayFormat = 'Do MMM';
-const allDates = {};
+import {
+  dateDisplayFormat,
+  dateFormat,
+  dateRanges
+} from '../../containers/Home/constants';
 
-export const dateRanges = [
-  {
-    value: `${moment(new Date()).format(dateFormat)}`,
-    label: 'This week'
-  },
-  {
-    value: `${moment(new Date()).add(7, 'days').format(dateFormat)}`,
-    label: 'Next week'
-  },
-  {
-    value: `${moment(new Date()).add(14, 'days').format(dateFormat)}`,
-    label: '3rd week'
-  }
-];
+const allDates = {};
 
 dateRanges.forEach((dateRange, ind) => {
   const weekDays = [];
@@ -70,5 +59,4 @@ export const minAgeLimits = [
     label: '45+'
   }
 ];
-
 export { allDates };
