@@ -1,9 +1,15 @@
-import qs from 'qs';
+import queryString from 'query-string';
 
 import { dateRanges, defaultFilters } from './constants';
 
 export const filterCenters = (centers = [], filters = defaultFilters) => {
-  const { minAgeLimit = [], feeType = [], vaccine = [], date = '' } = filters;
+  const {
+    minAgeLimit = [],
+    feeType = [],
+    vaccine = [],
+    date = '',
+    onlyAvailable = false
+  } = filters;
   const filteredCenters = centers
     .filter((c) => (feeType.length > 0 ? feeType.includes(c.fee_type) : true))
     .map((c) => {
@@ -13,7 +19,8 @@ export const filterCenters = (centers = [], filters = defaultFilters) => {
           (minAgeLimit.length > 0
             ? minAgeLimit.includes(s.min_age_limit)
             : true) &&
-          (vaccine.length > 0 ? vaccine.includes(s.vaccine) : true)
+          (vaccine.length > 0 ? vaccine.includes(s.vaccine) : true) &&
+          (onlyAvailable ? s.available_capacity > 0 : true)
       );
       return { ...c, sessions: filteredSessions };
     })
@@ -21,26 +28,23 @@ export const filterCenters = (centers = [], filters = defaultFilters) => {
   return filteredCenters;
 };
 
-export const getSearchCriteriaFromUrl = (search = '') => {
-  const { state, district, dateRange } = qs.parse(search, {
-    ignoreQueryPrefix: true
-  });
-  return {
+export const getParamsFromSearch = (search = '') => {
+  const { state, district, dateRange, minAgeLimit, feeType, vaccine, date } =
+    queryString.parse(search, {
+      arrayFormat: 'index',
+      parseBooleans: true,
+      parseNumbers: true
+    });
+  const searchCriteria = {
     state: state || '',
     district: district || '',
     dateRange: dateRange || dateRanges[0].value
   };
-};
-
-export const getFilterFromUrl = (search = '') => {
-  const { minAgeLimit, feeType, vaccine, date } = qs.parse(search, {
-    ignoreQueryPrefix: true,
-    parseArrays: true
-  });
-  return {
+  const filter = {
     minAgeLimit: minAgeLimit || defaultFilters.minAgeLimit,
     feeType: feeType || defaultFilters.feeType,
     date: date || defaultFilters.date,
     vaccine: vaccine || defaultFilters.vaccine
   };
+  return { searchCriteria, filter };
 };

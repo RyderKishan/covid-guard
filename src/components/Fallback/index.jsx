@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useHistory } from 'react-router-dom';
-import * as qs from 'qs';
+import queryString from 'query-string';
 
 import { FallBackContainer } from './styles';
 
@@ -15,7 +15,11 @@ const failureMessages = {
 };
 
 const getErrorMessage = (location) => {
-  const params = qs.parse(location.search, { ignoreQueryPrefix: true });
+  const params = queryString.parse(location.search, {
+    arrayFormat: 'index',
+    parseBooleans: true,
+    parseNumbers: true
+  });
   if (params.error) {
     const failureMessage = failureMessages[params.error];
     if (failureMessage) {

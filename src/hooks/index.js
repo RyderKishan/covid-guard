@@ -79,16 +79,36 @@ export const useCenters = (districtId) =>
 
 export const useSearchCenters = () =>
   useMutation(
-    async ({ district = '', dateRange = '' }) => {
-      // const centers = centersMock;
+    async ({ payload }) => {
+      console.log('useSearchCenters', payload);
+      const { district = '', dateRange = '' } = payload;
       const { centers = [] } = await get(
         `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district}&date=${dateRange}`
       );
       return centers;
     },
     {
-      onSuccess: (response) => response,
-      onError: () => {},
+      onSuccess: (response, { actions }) => {
+        actions.setSubmitting(false);
+        return response;
+      },
+      onError: (error, { actions }) => {
+        actions.setSubmitting(false);
+      },
       onMutate: () => {}
     }
+  );
+
+export const useCalendar = ({ district = '', dateRange = '' } = {}) =>
+  useQuery(
+    ['calendarByDistrict', district, 'dateRange', dateRange],
+    async (val) => {
+      console.log('useSearchCenters', { district, dateRange, val });
+      if (!district || !dateRange) return [];
+      const { centers = [] } = await get(
+        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district}&date=${dateRange}`
+      );
+      return centers;
+    },
+    { enabled: false }
   );

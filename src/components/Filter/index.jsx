@@ -118,6 +118,28 @@ const Filter = (props) => {
           ))}
         </FormGroup>
       </FormControl>
+      <FormControl component="fieldset">
+        <FormGroup row>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={Boolean(filters.onlyAvailable)}
+                onChange={(event) => {
+                  onFilter({
+                    ...filters,
+                    onlyAvailable: event.target.checked
+                  });
+                }}
+                inputProps={{
+                  readOnly: formReadonly
+                }}
+                name="onlyAvailable"
+              />
+            }
+            label="Only Available"
+          />
+        </FormGroup>
+      </FormControl>
       <FormControl
         error={Boolean(formik.submitCount > 0 && formik.errors.date)}
       >

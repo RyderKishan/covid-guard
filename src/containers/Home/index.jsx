@@ -1,6 +1,7 @@
 import React from 'react';
-// import qs from 'qs';
+import queryString from 'query-string';
 import * as Yup from 'yup';
+import { useHistory } from 'react-router-dom';
 import { useFormik } from 'formik';
 import { Helmet } from 'react-helmet';
 import Collapse from '@material-ui/core/Collapse';
@@ -15,18 +16,12 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 
-// import { useHistory } from 'react-router-dom';
-
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
 import DistrictSelect from '../../components/DistrictSelect';
 
 import { useStates, useSearchCenters } from '../../hooks';
-import {
-  filterCenters
-  // getFilterFromUrl,
-  // getSearchCriteriaFromUrl
-} from './utils';
+import { filterCenters, getParamsFromSearch } from './utils';
 import { HomeContainer, Paper, SearchCriteriaFields } from './styles';
 import {
   columns,
@@ -35,13 +30,26 @@ import {
   defaultSearchCriteria
 } from './constants';
 
+const setUrlParams = (searchCriteria, filters, push, pathname) => {
+  const paramString = queryString.stringify(
+    { ...searchCriteria, ...filters },
+    {
+      arrayFormat: 'index',
+      skipEmptyString: true,
+      skipNull: true
+    }
+  );
+  push(`${pathname}?${paramString}`);
+};
+
 const Home = () => {
-  // const {
-  //   location: { pathname, search },
-  //   push
-  // } = useHistory();
+  const {
+    location: { pathname, search },
+    push
+  } = useHistory();
 
   const { data: states = [], isLoading: isLoadingStates } = useStates();
+
   const {
     data: centers,
     mutate: searchCenters,
@@ -50,25 +58,19 @@ const Home = () => {
 
   const [showFilter, toggleFilter] = React.useState(false);
   const [filters, setFilters] = React.useState(defaultFilters);
-  const [
-    searchCriteria
-    // setSearchCriteria
-  ] = React.useState(defaultSearchCriteria);
+  const [searchCriteria, setSearchCriteria] = React.useState(
+    defaultSearchCriteria
+  );
   const [filteredCenters, setFilteredCenters] = React.useState([]);
 
-  const onSearch = (newCriteria) => {
-    // push(
-    //   `${pathname}?${qs.stringify(
-    //     { ...filters, ...newCriteria },
-    //     {
-    //       encode: true
-    //     }
-    //   )}`
-    // );
-    searchCenters(newCriteria);
+  const onSearch = (newCriteria, actions) => {
+    setUrlParams(newCriteria, filters, push, pathname);
+    searchCenters({ payload: newCriteria, actions });
+    actions.setSubmitting(false);
   };
 
   const onFilter = (f) => {
+    setUrlParams(searchCriteria, f, push, pathname);
     const filtered = filterCenters(centers, f);
     setFilteredCenters(filtered);
     setFilters(f);
@@ -80,9 +82,16 @@ const Home = () => {
       district: Yup.number().required('District is required'),
       dateRange: Yup.string().required('Date range is required')
     }),
+    enableReinitialize: true,
     initialValues: searchCriteria,
     onSubmit: onSearch
   });
+
+  React.useEffect(() => {
+    const { searchCriteria: sC, filter: f } = getParamsFromSearch(search);
+    setSearchCriteria(sC);
+    setFilters(f);
+  }, []);
 
   React.useEffect(() => {
     const filtered = filterCenters(centers, filters);
@@ -154,7 +163,13 @@ const Home = () => {
             </FormControl>
           </SearchCriteriaFields>
           <div>
-            <IconButton onClick={formik.handleSubmit}>
+            <IconButton
+              onClick={formik.handleSubmit}
+              disabled={
+                formik.isSubmitting ||
+                (formik.submitCount > 0 && !formik.isValid)
+              }
+            >
               <SearchIcon />
             </IconButton>
             <IconButton onClick={() => toggleFilter(!showFilter)}>
