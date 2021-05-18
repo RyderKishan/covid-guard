@@ -18,7 +18,16 @@ export const DailySessions = styled.div`
   width: calc(100vw - ${({ theme }) => theme.spacing(8)}px);
   overflow: auto;
   & > :not(:last-child) {
-    margin-right: ${({ theme }) => theme.spacing(4)}px;
+  }
+`;
+
+export const StatusBar = styled.div`
+  margin: 0 ${({ theme }) => theme.spacing(2)}px;
+  & > div {
+    white-space: nowrap;
+  }
+  & > div:not(:last-child) {
+    margin-right: ${({ theme }) => theme.spacing(2)}px;
   }
 `;
 

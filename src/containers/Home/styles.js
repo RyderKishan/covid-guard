@@ -22,6 +22,7 @@ export const SearchCriteriaFields = styled.div`
   display: flex;
   & > * {
     min-width: ${({ theme }) => theme.spacing(20)}px;
+    max-width: ${({ theme }) => theme.spacing(40)}px;
   }
   & > *:not(:last-child) {
     margin-right: ${({ theme }) => theme.spacing(4)}px;

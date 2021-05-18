@@ -2,7 +2,10 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import InputLabel from '@material-ui/core/InputLabel';
+import Input from '@material-ui/core/Input';
 import MenuItem from '@material-ui/core/MenuItem';
+import ListItemText from '@material-ui/core/ListItemText';
+import Checkbox from '@material-ui/core/Checkbox';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -14,6 +17,10 @@ const DistrictSelect = (props) => {
   const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(
     formik.values.state
   );
+  const allDistricts = {};
+  districts.forEach((district) => {
+    allDistricts[district.district_id] = district;
+  });
   return (
     <FormControl
       disabled={!formik.values.state}
@@ -26,16 +33,24 @@ const DistrictSelect = (props) => {
         labelId="district-label"
         id="district"
         name="district"
+        multiple
         value={formik.values.district}
         inputProps={{ readOnly: isLoadingDistricts }}
-        onChange={(event) => {
-          formik.handleChange(event);
-        }}
+        input={<Input />}
+        renderValue={(selected) =>
+          selected
+            .map(
+              (id) => (allDistricts[id] && allDistricts[id].district_name) || ''
+            )
+            .join(', ')
+        }
+        onChange={(event) => formik.handleChange(event)}
         displayEmpty
       >
         {districts.map(({ district_id: dI, district_name: dN }) => (
           <MenuItem key={dI} value={dI}>
-            {dN}
+            <Checkbox checked={(formik.values.district || []).includes(dI)} />
+            <ListItemText primary={dN} />
           </MenuItem>
         ))}
       </Select>

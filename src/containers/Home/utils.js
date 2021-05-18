@@ -37,7 +37,7 @@ export const getParamsFromSearch = (search = '') => {
     });
   const searchCriteria = {
     state: state || '',
-    district: district || '',
+    district: district || [],
     dateRange: dateRange || dateRanges[0].value
   };
   const filter = {

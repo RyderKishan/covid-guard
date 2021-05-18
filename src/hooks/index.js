@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useQuery, useMutation } from 'react-query';
+import { v4 as uuid } from 'uuid';
 
 import { get } from '../api';
 
@@ -77,38 +78,49 @@ export const useCenters = (districtId) =>
     { enabled: Boolean(districtId) }
   );
 
-export const useSearchCenters = () =>
+export const useSearchCenters = (setSnack) =>
   useMutation(
     async ({ payload }) => {
-      console.log('useSearchCenters', payload);
-      const { district = '', dateRange = '' } = payload;
-      const { centers = [] } = await get(
-        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district}&date=${dateRange}`
+      const { district = [], dateRange = '' } = payload;
+      if (!dateRange || (district && district.length === 0)) return [];
+      const allResponse = await Promise.all(
+        district.map((dI) =>
+          get(
+            `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${dI}&date=${dateRange}`
+          )
+        )
       );
-      return centers;
+      const allCenters = [];
+      allResponse.forEach((resp) => {
+        allCenters.push(...(resp.centers || []));
+      });
+      return allCenters;
     },
     {
       onSuccess: (response, { actions }) => {
         actions.setSubmitting(false);
+        if (response && response.length > 0) {
+          setSnack({
+            id: uuid(),
+            severity: 'success',
+            message: `${response.length} results found`
+          });
+        } else {
+          setSnack({
+            id: uuid(),
+            severity: 'warning',
+            message: 'No data available'
+          });
+        }
         return response;
       },
       onError: (error, { actions }) => {
         actions.setSubmitting(false);
-      },
-      onMutate: () => {}
+        setSnack({
+          id: uuid(),
+          severity: 'error',
+          message: 'Failed to fetch'
+        });
+      }
     }
-  );
-
-export const useCalendar = ({ district = '', dateRange = '' } = {}) =>
-  useQuery(
-    ['calendarByDistrict', district, 'dateRange', dateRange],
-    async (val) => {
-      console.log('useSearchCenters', { district, dateRange, val });
-      if (!district || !dateRange) return [];
-      const { centers = [] } = await get(
-        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${district}&date=${dateRange}`
-      );
-      return centers;
-    },
-    { enabled: false }
   );

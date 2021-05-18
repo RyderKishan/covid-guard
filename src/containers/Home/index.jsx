@@ -9,12 +9,14 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import FilterListIcon from '@material-ui/icons/FilterList';
+import Snackbar from '@material-ui/core/Snackbar';
 import SearchIcon from '@material-ui/icons/Search';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import Alert from '@material-ui/lab/Alert';
 
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
@@ -48,20 +50,32 @@ const Home = () => {
     push
   } = useHistory();
 
-  const { data: states = [], isLoading: isLoadingStates } = useStates();
-
-  const {
-    data: centers,
-    mutate: searchCenters,
-    isLoading: isLoadingCenters
-  } = useSearchCenters();
-
+  const [snack, setSnack] = React.useState({});
   const [showFilter, toggleFilter] = React.useState(false);
   const [filters, setFilters] = React.useState(defaultFilters);
   const [searchCriteria, setSearchCriteria] = React.useState(
     defaultSearchCriteria
   );
   const [filteredCenters, setFilteredCenters] = React.useState([]);
+
+  const { data: states = [], isLoading: isLoadingStates } = useStates();
+  const {
+    data: centers,
+    mutate: searchCenters,
+    isLoading: isLoadingCenters
+  } = useSearchCenters(setSnack);
+
+  const handleClose = (event, reason = '') => {
+    console.log('reason', reason);
+    switch (reason) {
+      case 'clickaway':
+      case 'timeout':
+        setSnack({});
+        break;
+      default:
+        setSnack({});
+    }
+  };
 
   const onSearch = (newCriteria, actions) => {
     setUrlParams(newCriteria, filters, push, pathname);
@@ -79,7 +93,10 @@ const Home = () => {
   const formik = useFormik({
     validationSchema: Yup.object().shape({
       state: Yup.number().required('State is required'),
-      district: Yup.number().required('District is required'),
+      district: Yup.array()
+        .of(Yup.number())
+        .min(1, 'Select atlease one district')
+        .required('District is required'),
       dateRange: Yup.string().required('Date range is required')
     }),
     enableReinitialize: true,
@@ -91,6 +108,11 @@ const Home = () => {
     const { searchCriteria: sC, filter: f } = getParamsFromSearch(search);
     setSearchCriteria(sC);
     setFilters(f);
+    if (sC.district && sC.state)
+      searchCenters({
+        payload: sC,
+        actions: { setSubmitting: formik.setSubmitting }
+      });
   }, []);
 
   React.useEffect(() => {
@@ -103,6 +125,19 @@ const Home = () => {
       <Helmet>
         <title>Covid Guard</title>
       </Helmet>
+      <Snackbar
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'center'
+        }}
+        open={Boolean(snack.id)}
+        onClose={handleClose}
+        autoHideDuration={6000}
+      >
+        <Alert onClose={handleClose} severity={snack.severity}>
+          {snack.message}
+        </Alert>
+      </Snackbar>
       <Paper>
         {isLoadingStates && <LinearProgress />}
         <Toolbar className="toolbar">
@@ -120,7 +155,7 @@ const Home = () => {
                 value={formik.values.state}
                 onChange={(event) => {
                   formik.handleChange(event);
-                  formik.setFieldValue('district', '', true);
+                  formik.setFieldValue('district', [], true);
                 }}
                 displayEmpty
               >

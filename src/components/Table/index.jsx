@@ -17,7 +17,12 @@ import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
 
-import { DailySessions, SessionCard, TableContainer } from './styles';
+import {
+  DailySessions,
+  SessionCard,
+  TableContainer,
+  StatusBar
+} from './styles';
 import { stableSort, getSorting, getFiltering, getRows } from './utils';
 
 const Table = (props) => {
@@ -25,7 +30,7 @@ const Table = (props) => {
   const [modRows, setModRows] = React.useState(rows);
   const [collapsibleRows, setCollapsibleRows] = React.useState({});
   const [page, setPage] = React.useState(0);
-  const [rowsPerPage, setRowsPerPage] = React.useState(7);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('calories');
   const [filter, setFilter] = React.useState({});
@@ -181,11 +186,24 @@ const Table = (props) => {
                         scope="row"
                         padding="default"
                       >
-                        <span>
-                          {column.valueGetter
-                            ? column.valueGetter(row)
-                            : row[column.field]}
-                        </span>
+                        {column.field !== 'fee_type' && column.valueGetter ? (
+                          <span>{column.valueGetter(row)}</span>
+                        ) : (
+                          <span>
+                            {column.field === 'fee_type' ? (
+                              <Chip
+                                color={
+                                  row[column.field] === 'Free'
+                                    ? 'primary'
+                                    : 'secondary'
+                                }
+                                label={row[column.field]}
+                              />
+                            ) : (
+                              row[column.field]
+                            )}
+                          </span>
+                        )}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -236,8 +254,13 @@ const Table = (props) => {
       </TableContainer>
       {pageable && (
         <TablePagination
-          rowsPerPageOptions={[7, 10, 20, 50, 100]}
+          rowsPerPageOptions={[10, 20, 50, 100]}
           component="div"
+          ActionsComponent={() => (
+            <StatusBar>
+              <div>{`Centers: ${modRows.length}`}</div>
+            </StatusBar>
+          )}
           count={modRows.length}
           rowsPerPage={rowsPerPage}
           page={page}

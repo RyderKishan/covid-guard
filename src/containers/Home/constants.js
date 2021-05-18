@@ -45,7 +45,7 @@ export const defaultFilters = {
 
 export const defaultSearchCriteria = {
   state: '',
-  district: '',
+  district: [],
   dateRange: dateRanges[0].value
 };
 
