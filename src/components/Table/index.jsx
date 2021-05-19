@@ -8,6 +8,7 @@ import Tooltip from '@material-ui/core/Tooltip';
 import Chip from '@material-ui/core/Chip';
 import Collapse from '@material-ui/core/Collapse';
 import TablePagination from '@material-ui/core/TablePagination';
+import Hidden from '@material-ui/core/Hidden';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import MuiTable from '@material-ui/core/Table';
@@ -16,12 +17,14 @@ import CloseIcon from '@material-ui/icons/Close';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
+import InfoIcon from '@material-ui/icons/Info';
 
 import {
   DailySessions,
   SessionCard,
   StatusText,
   TableContainer,
+  Center,
   StatusBar
 } from './styles';
 import { stableSort, getSorting, getFiltering, getRows } from './utils';
@@ -86,78 +89,86 @@ const Table = (props) => {
     setModRows(rows);
   }, [rows]);
 
+  const rowsToDisplay = stableSort(modRows, getSorting(order, orderBy)).slice(
+    page * rowsPerPage,
+    page * rowsPerPage + rowsPerPage
+  );
+
   return (
     <>
       <TableContainer>
-        <MuiTable stickyHeader padding="none">
-          <TableHead>
-            <TableRow>
-              <TableCell align="center">
-                <span>No</span>
-              </TableCell>
-              <TableCell padding="default" align="left">
-                <Tooltip title="Expand all" placement="bottom" enterDelay={100}>
-                  <IconButton
-                    aria-label="expand row"
-                    size="small"
-                    onClick={() => handleExpandAll()}
-                  >
-                    <HeightIcon />
-                  </IconButton>
-                </Tooltip>
-              </TableCell>
-              {columns.map((column) => (
-                <TableCell
-                  key={column.field}
-                  align={column.numeric ? 'right' : 'left'}
-                  padding={column.disablePadding ? 'none' : 'default'}
-                  sortDirection={orderBy === column.field ? order : false}
-                >
-                  {column.disableSorting ? (
-                    <span>{column.headerName}</span>
-                  ) : (
-                    <TableSortLabel
-                      active={orderBy === column.field}
-                      direction={orderBy === column.field ? order : 'asc'}
-                      onClick={createSortHandler(column.field)}
-                    >
-                      {column.headerName}
-                    </TableSortLabel>
-                  )}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {showFilter && (
+        {rowsToDisplay.length > 0 ? (
+          <MuiTable stickyHeader padding="none">
+            <TableHead>
               <TableRow>
                 <TableCell align="center">
+                  <span>No</span>
+                </TableCell>
+                <TableCell padding="default" align="left">
                   <Tooltip
-                    title="Clear filters"
-                    placement="right"
+                    title="Expand all"
+                    placement="bottom"
                     enterDelay={100}
                   >
-                    <IconButton onClick={clearAllFilters}>
-                      <CloseIcon />
+                    <IconButton
+                      aria-label="expand row"
+                      size="small"
+                      onClick={() => handleExpandAll()}
+                    >
+                      <HeightIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
-                <TableCell align="center" />
                 {columns.map((column) => (
-                  <TableCell key={column.field} scope="row" padding="default">
-                    {!column.disableSorting && (
-                      <TextField
-                        variant="outlined"
-                        onChange={(e) => handleFilterChange(e, column.field)}
-                      />
+                  <TableCell
+                    key={column.field}
+                    align={column.numeric ? 'right' : 'left'}
+                    padding={column.disablePadding ? 'none' : 'default'}
+                    sortDirection={orderBy === column.field ? order : false}
+                  >
+                    {column.disableSorting ? (
+                      <span>{column.headerName}</span>
+                    ) : (
+                      <TableSortLabel
+                        active={orderBy === column.field}
+                        direction={orderBy === column.field ? order : 'asc'}
+                        onClick={createSortHandler(column.field)}
+                      >
+                        {column.headerName}
+                      </TableSortLabel>
                     )}
                   </TableCell>
                 ))}
               </TableRow>
-            )}
-            {stableSort(modRows, getSorting(order, orderBy))
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((row, index) => (
+            </TableHead>
+            <TableBody>
+              {showFilter && (
+                <TableRow>
+                  <TableCell align="center">
+                    <Tooltip
+                      title="Clear filters"
+                      placement="right"
+                      enterDelay={100}
+                    >
+                      <IconButton onClick={clearAllFilters}>
+                        <CloseIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell align="center" />
+                  {columns.map((column) => (
+                    <TableCell key={column.field} scope="row" padding="default">
+                      {!column.disableSorting && (
+                        <TextField
+                          variant="outlined"
+                          onChange={(e) => handleFilterChange(e, column.field)}
+                        />
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              )}
+              {rowsToDisplay.map((row, index) => (
                 <React.Fragment key={row.center_id}>
                   <TableRow hover key={row.id || row.center_id}>
                     <TableCell padding="checkbox" align="center">
@@ -245,8 +256,11 @@ const Table = (props) => {
                   )}
                 </React.Fragment>
               ))}
-          </TableBody>
-        </MuiTable>
+            </TableBody>
+          </MuiTable>
+        ) : (
+          <Center>No Data</Center>
+        )}
       </TableContainer>
       {pageable && (
         <TablePagination
@@ -254,12 +268,25 @@ const Table = (props) => {
           component="div"
           ActionsComponent={() => (
             <>
-              <StatusBar>
-                <div>{`Centers: ${modRows.length}`}</div>
-              </StatusBar>
+              <Hidden smDown>
+                <StatusBar>
+                  <div>{`Centers: ${modRows.length}`}</div>
+                </StatusBar>
+              </Hidden>
               <StatusText>
-                APIs are subject to a rate limit of 100 API calls per 5 minutes
-                per IP - Cowin
+                <Hidden smDown>
+                  APIs are subject to a rate limit of 100 API calls per 5
+                  minutes per IP - Cowin
+                </Hidden>
+                <Hidden mdUp>
+                  <Tooltip
+                    title="APIs are subject to a rate limit of 100 API calls per 5 minutes
+                per IP - Cowin"
+                    placement="right"
+                  >
+                    <InfoIcon />
+                  </Tooltip>
+                </Hidden>
               </StatusText>
             </>
           )}

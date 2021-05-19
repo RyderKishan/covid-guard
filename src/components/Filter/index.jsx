@@ -13,10 +13,7 @@ import { vaccines, feeTypes, minAgeLimits, allDates } from './constants';
 import { FilterContainer, Center } from './styles';
 
 const Filter = (props) => {
-  const { formik, isLoading, isFetching, onFilter, filters } = props;
-
-  const formReadonly = isFetching;
-
+  const { formik, isLoading, isFetching, row, onFilter, filters } = props;
   if (isLoading)
     return (
       <FilterContainer>
@@ -27,8 +24,8 @@ const Filter = (props) => {
     );
 
   return (
-    <FilterContainer>
-      <FormControl component="fieldset">
+    <FilterContainer row={row} id="Filter">
+      <FormControl component="fieldset" disabled={isFetching}>
         <FormGroup row>
           {vaccines.map(({ value, label }) => (
             <FormControlLabel
@@ -36,9 +33,6 @@ const Filter = (props) => {
               control={
                 <Checkbox
                   checked={(filters.vaccine || []).includes(value)}
-                  inputProps={{
-                    readOnly: formReadonly
-                  }}
                   onChange={(event) => {
                     const newValue = [
                       ...new Set([...(filters.vaccine || []), value])
@@ -58,7 +52,7 @@ const Filter = (props) => {
           ))}
         </FormGroup>
       </FormControl>
-      <FormControl component="fieldset">
+      <FormControl component="fieldset" disabled={isFetching}>
         <FormGroup row>
           {feeTypes.map(({ value, label }) => (
             <FormControlLabel
@@ -77,9 +71,6 @@ const Filter = (props) => {
                         : newValue.filter((v) => v !== value)
                     });
                   }}
-                  inputProps={{
-                    readOnly: formReadonly
-                  }}
                   name={`${value}`}
                 />
               }
@@ -88,7 +79,7 @@ const Filter = (props) => {
           ))}
         </FormGroup>
       </FormControl>
-      <FormControl component="fieldset">
+      <FormControl component="fieldset" disabled={isFetching}>
         <FormGroup row>
           {minAgeLimits.map(({ value, label }) => (
             <FormControlLabel
@@ -107,9 +98,6 @@ const Filter = (props) => {
                         : newValue.filter((v) => v !== value)
                     });
                   }}
-                  inputProps={{
-                    readOnly: formReadonly
-                  }}
                   name={`${value}`}
                 />
               }
@@ -118,7 +106,7 @@ const Filter = (props) => {
           ))}
         </FormGroup>
       </FormControl>
-      <FormControl component="fieldset">
+      <FormControl component="fieldset" disabled={isFetching}>
         <FormGroup row>
           <FormControlLabel
             control={
@@ -129,9 +117,6 @@ const Filter = (props) => {
                     ...filters,
                     onlyAvailable: event.target.checked
                   });
-                }}
-                inputProps={{
-                  readOnly: formReadonly
                 }}
                 name="onlyAvailable"
               />
@@ -155,7 +140,7 @@ const Filter = (props) => {
             });
           }}
           inputProps={{
-            readOnly: formReadonly
+            readOnly: isFetching
           }}
           displayEmpty
         >
@@ -178,6 +163,7 @@ export default Filter;
 
 Filter.defaultProps = {
   isLoading: false,
+  row: true,
   isFetching: false,
   onFilter: () => {},
   filters: {},
@@ -186,6 +172,7 @@ Filter.defaultProps = {
 
 Filter.propTypes = {
   isLoading: PropTypes.bool,
+  row: PropTypes.bool,
   isFetching: PropTypes.bool,
   onFilter: PropTypes.func,
   filters: PropTypes.any,

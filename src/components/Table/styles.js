@@ -81,3 +81,10 @@ export const SessionCard = styled.div`
     font-size: 0.75rem;
   }
 `;
+
+export const Center = styled.div`
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-content: center;
+`;

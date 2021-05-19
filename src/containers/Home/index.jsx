@@ -5,7 +5,11 @@ import { useFormik } from 'formik';
 import { Helmet } from 'react-helmet';
 import Collapse from '@material-ui/core/Collapse';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Hidden from '@material-ui/core/Hidden';
+import Modal from '@material-ui/core/Modal';
 import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -23,9 +27,15 @@ import Table from '../../components/Table';
 import Filter from '../../components/Filter';
 import DistrictSelect from '../../components/DistrictSelect';
 
-import { useStates, useSearchCenters } from '../../hooks';
+import { useStates, useCenters } from '../../hooks';
 import { filterCenters, getParamsFromSearch, setUrlParams } from './utils';
-import { HomeContainer, Paper, SearchCriteriaFields } from './styles';
+import {
+  HomeContainer,
+  Paper,
+  SearchCriteriaFields,
+  Center,
+  ModalContent
+} from './styles';
 import {
   columns,
   dateRanges,
@@ -45,14 +55,14 @@ const Home = () => {
   const [searchCriteria, setSearchCriteria] = React.useState(
     defaultSearchCriteria
   );
-  const [filteredCenters, setFilteredCenters] = React.useState([]);
 
+  const allCenters = useCenters(
+    searchCriteria.district,
+    searchCriteria.dateRange
+  );
   const { data: states = [], isLoading: isLoadingStates } = useStates();
-  const {
-    data: centers,
-    mutate: searchCenters,
-    isLoading: isLoadingCenters
-  } = useSearchCenters(setSnack);
+
+  let isLoadingCenters = false;
 
   const handleClose = (event, reason = '') => {
     switch (reason) {
@@ -73,21 +83,18 @@ const Home = () => {
 
   const onSearch = (newCriteria, actions) => {
     setUrlParams(newCriteria, filters, push, pathname);
-    searchCenters({ payload: newCriteria, actions });
+    setSearchCriteria(newCriteria);
     actions.setSubmitting(false);
   };
 
   const onFilter = (f) => {
     setUrlParams(searchCriteria, f, push, pathname);
-    const filtered = filterCenters(centers, f);
-    setFilteredCenters(filtered);
     setFilters(f);
   };
 
   const clearFilters = () => {
     setSearchCriteria(defaultSearchCriteria);
     setFilters(defaultFilters);
-    setFilteredCenters([]);
     setUrlParams(defaultSearchCriteria, defaultFilters, push, pathname);
   };
 
@@ -109,17 +116,14 @@ const Home = () => {
     const { searchCriteria: sC, filter: f } = getParamsFromSearch(search);
     setSearchCriteria(sC);
     setFilters(f);
-    if (sC.district && sC.state)
-      searchCenters({
-        payload: sC,
-        actions: { setSubmitting: formik.setSubmitting }
-      });
   }, []);
 
-  React.useEffect(() => {
-    const filtered = filterCenters(centers, filters);
-    setFilteredCenters(filtered);
-  }, [centers]);
+  const centers = [];
+  (allCenters || []).forEach(({ data, isLoading }) => {
+    if (isLoading) isLoadingCenters = true;
+    centers.push(...(data || []));
+  });
+  const filteredCenters = filterCenters(centers, filters);
 
   return (
     <HomeContainer>
@@ -198,40 +202,85 @@ const Home = () => {
               )}
             </FormControl>
           </SearchCriteriaFields>
-          <div>
+          <div className="actions">
             <Tooltip title="Search" placement="bottom" enterDelay={100}>
-              <IconButton
-                onClick={formik.handleSubmit}
-                disabled={
-                  formik.isSubmitting ||
-                  (formik.submitCount > 0 && !formik.isValid)
-                }
-              >
-                <SearchIcon />
-              </IconButton>
+              <div>
+                <IconButton
+                  onClick={formik.handleSubmit}
+                  disabled={
+                    !formik.dirty ||
+                    isLoadingCenters ||
+                    (formik.submitCount > 0 && !formik.isValid)
+                  }
+                >
+                  <SearchIcon />
+                </IconButton>
+              </div>
             </Tooltip>
             <Tooltip title="Show filters" placement="bottom" enterDelay={100}>
-              <IconButton onClick={() => toggleFilter(!showFilter)}>
-                <FilterListIcon />
-              </IconButton>
+              <div>
+                <IconButton onClick={() => toggleFilter(!showFilter)}>
+                  <FilterListIcon />
+                </IconButton>
+              </div>
             </Tooltip>
             <Tooltip title="Clear filters" placement="bottom" enterDelay={100}>
-              <IconButton onClick={() => clearFilters()}>
-                <CloseIcon />
-              </IconButton>
+              <div>
+                <IconButton
+                  disabled={isLoadingCenters}
+                  onClick={() => clearFilters()}
+                >
+                  <CloseIcon />
+                </IconButton>
+              </div>
             </Tooltip>
           </div>
         </Toolbar>
-        <Collapse in={showFilter} timeout="auto" unmountOnExit>
-          <Filter
-            formik={formik}
-            isLoading={isLoadingStates}
-            isFetching={isLoadingCenters}
-            filters={filters}
-            onFilter={onFilter}
-          />
-        </Collapse>
-        <Table rows={filteredCenters} columns={columns} />
+        <Hidden smDown>
+          <Collapse in={showFilter} timeout="auto" unmountOnExit>
+            <Filter
+              formik={formik}
+              isLoading={isLoadingStates}
+              isFetching={isLoadingCenters}
+              filters={filters}
+              onFilter={onFilter}
+            />
+          </Collapse>
+        </Hidden>
+        <Hidden mdUp>
+          <Modal
+            open={showFilter}
+            onClose={() => toggleFilter(false)}
+            aria-labelledby="filter-modal-title"
+            aria-describedby="filter-modal-description"
+          >
+            <ModalContent>
+              <div className="header">
+                <Typography variant="h6">Filters</Typography>
+                <IconButton onClick={() => toggleFilter(false)}>
+                  <CloseIcon />
+                </IconButton>
+              </div>
+              <div className="content">
+                <Filter
+                  formik={formik}
+                  row={false}
+                  isLoading={isLoadingStates}
+                  isFetching={isLoadingCenters}
+                  filters={filters}
+                  onFilter={onFilter}
+                />
+              </div>
+            </ModalContent>
+          </Modal>
+        </Hidden>
+        {isLoadingCenters ? (
+          <Center>
+            <CircularProgress color="secondary" />
+          </Center>
+        ) : (
+          <Table rows={filteredCenters} columns={columns} />
+        )}
       </Paper>
     </HomeContainer>
   );

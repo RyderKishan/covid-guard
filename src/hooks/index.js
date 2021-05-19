@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
-import { useQuery, useMutation } from 'react-query';
+import { useQuery, useQueries, useMutation } from 'react-query';
 import { v4 as uuid } from 'uuid';
 
 import { get } from '../api';
+
+// const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const useWidth = () => {
   const theme = useTheme();
@@ -63,20 +65,19 @@ export const useDistricts = (stateId) =>
     { enabled: Boolean(stateId) }
   );
 
-export const useCenters = (districtId) =>
-  useQuery(
-    ['centers', districtId],
-    async () => {
-      if (!districtId) return [];
+export const useCenters = (district = [], dateRange) => {
+  const queries = district.map((districtId) => ({
+    queryKey: ['calendarByDistrict', districtId, 'date', dateRange],
+    queryFn: async () => {
+      if (!districtId || !dateRange) return [];
       const response = await get(
-        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${new Date()
-          .toLocaleDateString()
-          .replaceAll('/', '-')}`
+        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${dateRange}`
       );
       return (response && response.centers) || [];
-    },
-    { enabled: Boolean(districtId) }
-  );
+    }
+  }));
+  return useQueries(queries);
+};
 
 export const useSearchCenters = (setSnack) =>
   useMutation(
