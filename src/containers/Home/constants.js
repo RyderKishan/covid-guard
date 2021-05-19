@@ -6,7 +6,6 @@ export const columns = [
   { field: 'district_name', headerName: 'District Name' },
   { field: 'block_name', headerName: 'Block Name' },
   { field: 'name', headerName: 'Center Name' },
-  { field: 'address', headerName: 'Address' },
   {
     field: 'pincode',
     headerName: 'Pincode',

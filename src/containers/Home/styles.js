@@ -7,6 +7,18 @@ export const Paper = styled(MuiPaper)`
   flex-direction: column;
   & > .toolbar {
     & > .actions {
+      .up {
+        transform: rotate(-180deg);
+        transition: transform
+          ${({ theme }) => theme.transitions.duration.standard}ms
+          ${({ theme }) => theme.transitions.easing.easeIn};
+      }
+      .down {
+        transform: rotate(0deg);
+        transition: transform
+          ${({ theme }) => theme.transitions.duration.standard}ms
+          ${({ theme }) => theme.transitions.easing.easeIn};
+      }
       margin: ${({ theme }) => theme.spacing(2)}px;
       display: flex;
     }
@@ -18,17 +30,6 @@ export const Paper = styled(MuiPaper)`
   & td,
   th {
     white-space: nowrap;
-  }
-`;
-
-export const SearchCriteriaFields = styled.div`
-  flex: 1;
-  display: flex;
-  flex-wrap: wrap;
-  & > * {
-    min-width: ${({ theme }) => theme.spacing(20)}px;
-    max-width: ${({ theme }) => theme.spacing(40)}px;
-    margin: ${({ theme }) => theme.spacing(2)}px;
   }
 `;
 

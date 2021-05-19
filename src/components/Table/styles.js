@@ -1,4 +1,13 @@
 import styled from 'styled-components';
+import MuiTablePagination from '@material-ui/core/TablePagination';
+
+export const TablePagination = styled(MuiTablePagination)`
+  & > div {
+    & > p {
+      margin: 0 16px;
+    }
+  }
+`;
 
 export const TableContainer = styled.div`
   flex: 1;
@@ -26,7 +35,13 @@ export const TableContainer = styled.div`
   }
 `;
 
+export const CenterDetails = styled.div`
+  padding: ${({ theme }) => theme.spacing(2)}px;
+`;
+
 export const DailySessions = styled.div`
+  position: sticky;
+  left: ${({ theme }) => theme.spacing(2)}px;
   min-height: ${({ theme }) => theme.spacing(4)}px;
   margin: ${({ theme }) => theme.spacing(2)}px;
   display: flex;
@@ -35,20 +50,6 @@ export const DailySessions = styled.div`
   & > :not(:last-child) {
     margin-right: ${({ theme }) => theme.spacing(4)}px;
   }
-`;
-
-export const StatusBar = styled.div`
-  margin: 0 ${({ theme }) => theme.spacing(2)}px;
-  & > div {
-    white-space: nowrap;
-  }
-  & > div:not(:last-child) {
-    margin-right: ${({ theme }) => theme.spacing(2)}px;
-  }
-`;
-
-export const StatusText = styled.div`
-  position: absolute;
 `;
 
 export const SessionCard = styled.div`

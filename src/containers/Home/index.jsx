@@ -14,34 +14,20 @@ import IconButton from '@material-ui/core/IconButton';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Snackbar from '@material-ui/core/Snackbar';
 import SearchIcon from '@material-ui/icons/Search';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import DoneIcon from '@material-ui/icons/Done';
 import CloseIcon from '@material-ui/icons/Close';
-import InputLabel from '@material-ui/core/InputLabel';
-import MenuItem from '@material-ui/core/MenuItem';
 import Tooltip from '@material-ui/core/Tooltip';
-import FormHelperText from '@material-ui/core/FormHelperText';
-import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
 import Alert from '@material-ui/lab/Alert';
 
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
-import DistrictSelect from '../../components/DistrictSelect';
+import SearchCriteria from '../../components/SearchCriteria';
 
 import { useStates, useCenters } from '../../hooks';
 import { filterCenters, getParamsFromSearch, setUrlParams } from './utils';
-import {
-  HomeContainer,
-  Paper,
-  SearchCriteriaFields,
-  Center,
-  ModalContent
-} from './styles';
-import {
-  columns,
-  dateRanges,
-  defaultFilters,
-  defaultSearchCriteria
-} from './constants';
+import { HomeContainer, Paper, Center, ModalContent } from './styles';
+import { columns, defaultFilters, defaultSearchCriteria } from './constants';
 
 const Home = () => {
   const {
@@ -50,6 +36,7 @@ const Home = () => {
   } = useHistory();
 
   const [snack, setSnack] = React.useState({});
+  const [showSearch, toggleSearch] = React.useState(false);
   const [showFilter, toggleFilter] = React.useState(false);
   const [filters, setFilters] = React.useState(defaultFilters);
   const [searchCriteria, setSearchCriteria] = React.useState(
@@ -82,6 +69,7 @@ const Home = () => {
   };
 
   const onSearch = (newCriteria, actions) => {
+    toggleSearch(false);
     setUrlParams(newCriteria, filters, push, pathname);
     setSearchCriteria(newCriteria);
     actions.setSubmitting(false);
@@ -93,6 +81,7 @@ const Home = () => {
   };
 
   const clearFilters = () => {
+    toggleSearch(true);
     setSearchCriteria(defaultSearchCriteria);
     setFilters(defaultFilters);
     setUrlParams(defaultSearchCriteria, defaultFilters, push, pathname);
@@ -146,62 +135,22 @@ const Home = () => {
       <Paper>
         {isLoadingStates && <LinearProgress />}
         <Toolbar className="toolbar">
-          <SearchCriteriaFields>
-            <FormControl
-              error={Boolean(formik.submitCount > 0 && formik.errors.state)}
-            >
-              <InputLabel shrink id="state-label">
-                State
-              </InputLabel>
-              <Select
-                labelId="state-label"
-                id="state"
-                name="state"
-                value={formik.values.state}
-                onChange={(event) => {
-                  formik.handleChange(event);
-                  formik.setFieldValue('district', [], true);
-                }}
-                displayEmpty
-              >
-                {states.map(({ state_name: sN, state_id: sI }) => (
-                  <MenuItem key={sI} value={sI}>
-                    {sN}
-                  </MenuItem>
-                ))}
-              </Select>
-              {Boolean(formik.submitCount > 0 && formik.errors.state) && (
-                <FormHelperText>{formik.errors.state}</FormHelperText>
-              )}
-            </FormControl>
-            <DistrictSelect formik={formik} />
-            <FormControl
-              error={Boolean(formik.submitCount > 0 && formik.errors.dateRange)}
-            >
-              <InputLabel shrink id="dateRange-label">
-                Date Range
-              </InputLabel>
-              <Select
-                labelId="dateRange-label"
-                id="dateRange"
-                name="dateRange"
-                value={formik.values.dateRange}
-                onChange={(event) => {
-                  formik.handleChange(event);
-                }}
-                displayEmpty
-              >
-                {dateRanges.map(({ value, label }) => (
-                  <MenuItem key={value} value={value}>
-                    {label}
-                  </MenuItem>
-                ))}
-              </Select>
-              {Boolean(formik.submitCount > 0 && formik.errors.dateRange) && (
-                <FormHelperText>{formik.errors.dateRange}</FormHelperText>
-              )}
-            </FormControl>
-          </SearchCriteriaFields>
+          <Hidden smDown>
+            <SearchCriteria states={states} formik={formik} />
+          </Hidden>
+          <Hidden mdUp>
+            <div className="actions">
+              <Tooltip title="Show search" placement="bottom" enterDelay={100}>
+                <IconButton
+                  className={showSearch ? 'up' : 'down'}
+                  onClick={() => toggleSearch(!showSearch)}
+                >
+                  {/* {showSearch ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />} */}
+                  <ArrowDownwardIcon />
+                </IconButton>
+              </Tooltip>
+            </div>
+          </Hidden>
           <div className="actions">
             <Tooltip title="Search" placement="bottom" enterDelay={100}>
               <div>
@@ -236,6 +185,11 @@ const Home = () => {
             </Tooltip>
           </div>
         </Toolbar>
+        <Hidden mdUp>
+          <Collapse in={showSearch} timeout="auto" unmountOnExit>
+            <SearchCriteria fullWidth states={states} formik={formik} />
+          </Collapse>
+        </Hidden>
         <Hidden smDown>
           <Collapse in={showFilter} timeout="auto" unmountOnExit>
             <Filter
@@ -257,9 +211,11 @@ const Home = () => {
             <ModalContent>
               <div className="header">
                 <Typography variant="h6">Filters</Typography>
-                <IconButton onClick={() => toggleFilter(false)}>
-                  <CloseIcon />
-                </IconButton>
+                <div>
+                  <IconButton onClick={() => toggleFilter(false)}>
+                    <DoneIcon />
+                  </IconButton>
+                </div>
               </div>
               <div className="content">
                 <Filter

@@ -7,8 +7,6 @@ import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
 import Chip from '@material-ui/core/Chip';
 import Collapse from '@material-ui/core/Collapse';
-import TablePagination from '@material-ui/core/TablePagination';
-import Hidden from '@material-ui/core/Hidden';
 import TableRow from '@material-ui/core/TableRow';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
 import MuiTable from '@material-ui/core/Table';
@@ -17,15 +15,14 @@ import CloseIcon from '@material-ui/icons/Close';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
-import InfoIcon from '@material-ui/icons/Info';
 
 import {
   DailySessions,
+  TablePagination,
   SessionCard,
-  StatusText,
+  CenterDetails,
   TableContainer,
-  Center,
-  StatusBar
+  Center
 } from './styles';
 import { stableSort, getSorting, getFiltering, getRows } from './utils';
 
@@ -98,7 +95,7 @@ const Table = (props) => {
     <>
       <TableContainer>
         {rowsToDisplay.length > 0 ? (
-          <MuiTable stickyHeader padding="none">
+          <MuiTable stickyHeader padding="none" size="medium">
             <TableHead>
               <TableRow>
                 <TableCell align="center">
@@ -225,6 +222,9 @@ const Table = (props) => {
                           timeout="auto"
                           unmountOnExit
                         >
+                          <CenterDetails>
+                            {`Address: ${row.address}`}
+                          </CenterDetails>
                           <DailySessions>
                             {row.sessions.map((session) => (
                               <SessionCard key={session.session_id}>
@@ -266,30 +266,6 @@ const Table = (props) => {
         <TablePagination
           rowsPerPageOptions={[10, 20, 50, 100]}
           component="div"
-          ActionsComponent={() => (
-            <>
-              <Hidden smDown>
-                <StatusBar>
-                  <div>{`Centers: ${modRows.length}`}</div>
-                </StatusBar>
-              </Hidden>
-              <StatusText>
-                <Hidden smDown>
-                  APIs are subject to a rate limit of 100 API calls per 5
-                  minutes per IP - Cowin
-                </Hidden>
-                <Hidden mdUp>
-                  <Tooltip
-                    title="APIs are subject to a rate limit of 100 API calls per 5 minutes
-                per IP - Cowin"
-                    placement="right"
-                  >
-                    <InfoIcon />
-                  </Tooltip>
-                </Hidden>
-              </StatusText>
-            </>
-          )}
           count={modRows.length}
           rowsPerPage={rowsPerPage}
           page={page}
