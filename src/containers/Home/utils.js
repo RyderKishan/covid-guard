@@ -48,3 +48,15 @@ export const getParamsFromSearch = (search = '') => {
   };
   return { searchCriteria, filter };
 };
+
+export const setUrlParams = (searchCriteria, filters, push, pathname) => {
+  const paramString = queryString.stringify(
+    { ...searchCriteria, ...filters },
+    {
+      arrayFormat: 'index',
+      skipEmptyString: true,
+      skipNull: true
+    }
+  );
+  push(`${pathname}?${paramString}`);
+};

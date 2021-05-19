@@ -1,5 +1,4 @@
 import React from 'react';
-import queryString from 'query-string';
 import * as Yup from 'yup';
 import { useHistory } from 'react-router-dom';
 import { useFormik } from 'formik';
@@ -11,8 +10,10 @@ import IconButton from '@material-ui/core/IconButton';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Snackbar from '@material-ui/core/Snackbar';
 import SearchIcon from '@material-ui/icons/Search';
+import CloseIcon from '@material-ui/icons/Close';
 import InputLabel from '@material-ui/core/InputLabel';
 import MenuItem from '@material-ui/core/MenuItem';
+import Tooltip from '@material-ui/core/Tooltip';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
@@ -23,7 +24,7 @@ import Filter from '../../components/Filter';
 import DistrictSelect from '../../components/DistrictSelect';
 
 import { useStates, useSearchCenters } from '../../hooks';
-import { filterCenters, getParamsFromSearch } from './utils';
+import { filterCenters, getParamsFromSearch, setUrlParams } from './utils';
 import { HomeContainer, Paper, SearchCriteriaFields } from './styles';
 import {
   columns,
@@ -31,18 +32,6 @@ import {
   defaultFilters,
   defaultSearchCriteria
 } from './constants';
-
-const setUrlParams = (searchCriteria, filters, push, pathname) => {
-  const paramString = queryString.stringify(
-    { ...searchCriteria, ...filters },
-    {
-      arrayFormat: 'index',
-      skipEmptyString: true,
-      skipNull: true
-    }
-  );
-  push(`${pathname}?${paramString}`);
-};
 
 const Home = () => {
   const {
@@ -66,14 +55,19 @@ const Home = () => {
   } = useSearchCenters(setSnack);
 
   const handleClose = (event, reason = '') => {
-    console.log('reason', reason);
     switch (reason) {
       case 'clickaway':
       case 'timeout':
-        setSnack({});
+        setSnack({
+          ...snack,
+          id: undefined
+        });
         break;
       default:
-        setSnack({});
+        setSnack({
+          ...snack,
+          id: undefined
+        });
     }
   };
 
@@ -88,6 +82,13 @@ const Home = () => {
     const filtered = filterCenters(centers, f);
     setFilteredCenters(filtered);
     setFilters(f);
+  };
+
+  const clearFilters = () => {
+    setSearchCriteria(defaultSearchCriteria);
+    setFilters(defaultFilters);
+    setFilteredCenters([]);
+    setUrlParams(defaultSearchCriteria, defaultFilters, push, pathname);
   };
 
   const formik = useFormik({
@@ -198,18 +199,27 @@ const Home = () => {
             </FormControl>
           </SearchCriteriaFields>
           <div>
-            <IconButton
-              onClick={formik.handleSubmit}
-              disabled={
-                formik.isSubmitting ||
-                (formik.submitCount > 0 && !formik.isValid)
-              }
-            >
-              <SearchIcon />
-            </IconButton>
-            <IconButton onClick={() => toggleFilter(!showFilter)}>
-              <FilterListIcon />
-            </IconButton>
+            <Tooltip title="Search" placement="bottom" enterDelay={100}>
+              <IconButton
+                onClick={formik.handleSubmit}
+                disabled={
+                  formik.isSubmitting ||
+                  (formik.submitCount > 0 && !formik.isValid)
+                }
+              >
+                <SearchIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Show filters" placement="bottom" enterDelay={100}>
+              <IconButton onClick={() => toggleFilter(!showFilter)}>
+                <FilterListIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Clear filters" placement="bottom" enterDelay={100}>
+              <IconButton onClick={() => clearFilters()}>
+                <CloseIcon />
+              </IconButton>
+            </Tooltip>
           </div>
         </Toolbar>
         <Collapse in={showFilter} timeout="auto" unmountOnExit>

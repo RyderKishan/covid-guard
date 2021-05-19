@@ -20,6 +20,7 @@ import HeightIcon from '@material-ui/icons/Height';
 import {
   DailySessions,
   SessionCard,
+  StatusText,
   TableContainer,
   StatusBar
 } from './styles';
@@ -144,10 +145,12 @@ const Table = (props) => {
                 <TableCell align="center" />
                 {columns.map((column) => (
                   <TableCell key={column.field} scope="row" padding="default">
-                    <TextField
-                      variant="outlined"
-                      onChange={(e) => handleFilterChange(e, column.field)}
-                    />
+                    {!column.disableSorting && (
+                      <TextField
+                        variant="outlined"
+                        onChange={(e) => handleFilterChange(e, column.field)}
+                      />
+                    )}
                   </TableCell>
                 ))}
               </TableRow>
@@ -156,11 +159,11 @@ const Table = (props) => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((row, index) => (
                 <React.Fragment key={row.center_id}>
-                  <TableRow hover role="checkbox" key={row.id || row.center_id}>
-                    <TableCell align="center">
+                  <TableRow hover key={row.id || row.center_id}>
+                    <TableCell padding="checkbox" align="center">
                       <span>{index + 1}</span>
                     </TableCell>
-                    <TableCell padding="default" align="left">
+                    <TableCell padding="default" align="center">
                       <IconButton
                         aria-label="expand row"
                         size="small"
@@ -178,34 +181,27 @@ const Table = (props) => {
                         )}
                       </IconButton>
                     </TableCell>
-                    {columns.map((column, cellIndex) => (
-                      <TableCell
-                        id={`table-row-${index}-cell-${cellIndex}`}
-                        key={column.field}
-                        align={column.align || 'left'}
-                        scope="row"
-                        padding="default"
-                      >
-                        {column.field !== 'fee_type' && column.valueGetter ? (
-                          <span>{column.valueGetter(row)}</span>
-                        ) : (
-                          <span>
-                            {column.field === 'fee_type' ? (
-                              <Chip
-                                color={
-                                  row[column.field] === 'Free'
-                                    ? 'primary'
-                                    : 'secondary'
-                                }
-                                label={row[column.field]}
-                              />
-                            ) : (
-                              row[column.field]
-                            )}
+                    {columns.map((column, cellIndex) => {
+                      const cellValue = column.valueGetter
+                        ? column.valueGetter(row)
+                        : row[column.field];
+                      return (
+                        <TableCell
+                          id={`table-row-${index}-cell-${cellIndex}`}
+                          key={column.field}
+                          align={column.align || 'left'}
+                          scope="row"
+                          padding="default"
+                        >
+                          <span
+                            className={`data-${column.field}`}
+                            title={cellValue}
+                          >
+                            {cellValue}
                           </span>
-                        )}
-                      </TableCell>
-                    ))}
+                        </TableCell>
+                      );
+                    })}
                   </TableRow>
                   {row.sessions && row.sessions.length > 0 && (
                     <TableRow>
@@ -257,9 +253,15 @@ const Table = (props) => {
           rowsPerPageOptions={[10, 20, 50, 100]}
           component="div"
           ActionsComponent={() => (
-            <StatusBar>
-              <div>{`Centers: ${modRows.length}`}</div>
-            </StatusBar>
+            <>
+              <StatusBar>
+                <div>{`Centers: ${modRows.length}`}</div>
+              </StatusBar>
+              <StatusText>
+                APIs are subject to a rate limit of 100 API calls per 5 minutes
+                per IP - Cowin
+              </StatusText>
+            </>
           )}
           count={modRows.length}
           rowsPerPage={rowsPerPage}

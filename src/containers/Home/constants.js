@@ -1,20 +1,25 @@
 import moment from 'moment';
 
 export const columns = [
-  { field: 'center_id', headerName: 'Center Id' },
+  { field: 'center_id', headerName: 'Center Id', align: 'center' },
+  { field: 'fee_type', headerName: 'Type', align: 'center' },
+  { field: 'district_name', headerName: 'District Name' },
+  { field: 'block_name', headerName: 'Block Name' },
   { field: 'name', headerName: 'Center Name' },
-  { field: 'fee_type', headerName: 'Type' },
+  { field: 'address', headerName: 'Address' },
   {
     field: 'pincode',
     headerName: 'Pincode',
-    type: 'number'
+    type: 'number',
+    align: 'center'
   },
   {
     field: 'noOfSessions',
     headerName: 'No of sessions',
     description: 'This column has a value getter and is not sortable.',
     disableSorting: true,
-    valueGetter: (row) => `${(row.sessions || []).length}`
+    valueGetter: (row) => `${(row.sessions || []).length}`,
+    align: 'center'
   }
 ];
 

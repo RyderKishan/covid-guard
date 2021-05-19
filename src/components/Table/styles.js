@@ -9,6 +9,21 @@ export const TableContainer = styled.div`
     flex: 1;
     overflow: auto;
   }
+  td > span.data-fee_type {
+    overflow: hidden;
+    white-space: nowrap;
+    border-radius: ${({ theme }) => theme.spacing(2)}px;
+    padding: ${({ theme }) => theme.spacing(1)}px
+      ${({ theme }) => theme.spacing(2)}px;
+  }
+  td > span.data-fee_type[title='Free'] {
+    background-color: ${({ theme }) => theme.palette.success.main};
+    color: ${({ theme }) => theme.palette.success.contrastText};
+  }
+  td > span.data-fee_type[title='Paid'] {
+    background-color: ${({ theme }) => theme.palette.error.main};
+    color: ${({ theme }) => theme.palette.error.contrastText};
+  }
 `;
 
 export const DailySessions = styled.div`
@@ -18,6 +33,7 @@ export const DailySessions = styled.div`
   width: calc(100vw - ${({ theme }) => theme.spacing(8)}px);
   overflow: auto;
   & > :not(:last-child) {
+    margin-right: ${({ theme }) => theme.spacing(4)}px;
   }
 `;
 
@@ -29,6 +45,10 @@ export const StatusBar = styled.div`
   & > div:not(:last-child) {
     margin-right: ${({ theme }) => theme.spacing(2)}px;
   }
+`;
+
+export const StatusText = styled.div`
+  position: absolute;
 `;
 
 export const SessionCard = styled.div`
