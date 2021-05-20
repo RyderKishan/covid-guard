@@ -1,11 +1,20 @@
 import styled from 'styled-components';
-import MuiTablePagination from '@material-ui/core/TablePagination';
 
-export const TablePagination = styled(MuiTablePagination)`
-  & > div {
-    & > p {
-      margin: 0 16px;
+export const TablePagination = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: ${({ theme }) => theme.mixins.toolbar.minHeight}px;
+  padding: 0 ${({ theme }) => theme.spacing(2)}px;
+  & > div.actions {
+    & > :first-child {
+      min-width: ${({ theme }) => theme.spacing(6)}px;
     }
+    & > :not(:last-child) {
+      margin-right: ${({ theme }) => theme.spacing(2)}px;
+    }
+    align-items: center;
+    display: flex;
   }
 `;
 

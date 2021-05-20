@@ -11,10 +11,11 @@ import Modal from '@material-ui/core/Modal';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import Badge from '@material-ui/core/Badge';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import Snackbar from '@material-ui/core/Snackbar';
 import SearchIcon from '@material-ui/icons/Search';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import DoneIcon from '@material-ui/icons/Done';
 import CloseIcon from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
@@ -103,6 +104,8 @@ const Home = () => {
 
   React.useEffect(() => {
     const { searchCriteria: sC, filter: f } = getParamsFromSearch(search);
+    if (!sC.state && sC.district && sC.district.length === 0)
+      toggleSearch(true);
     setSearchCriteria(sC);
     setFilters(f);
   }, []);
@@ -113,6 +116,13 @@ const Home = () => {
     centers.push(...(data || []));
   });
   const filteredCenters = filterCenters(centers, filters);
+
+  const isFilterApplied =
+    filters.date ||
+    filters.onlyAvailable ||
+    filters.feeType.length > 0 ||
+    filters.vaccine.length > 0 ||
+    filters.minAgeLimit.length > 0;
 
   return (
     <HomeContainer>
@@ -145,8 +155,7 @@ const Home = () => {
                   className={showSearch ? 'up' : 'down'}
                   onClick={() => toggleSearch(!showSearch)}
                 >
-                  {/* {showSearch ? <ArrowUpwardIcon /> : <ArrowDownwardIcon />} */}
-                  <ArrowDownwardIcon />
+                  <ExpandMoreIcon />
                 </IconButton>
               </Tooltip>
             </div>
@@ -169,7 +178,13 @@ const Home = () => {
             <Tooltip title="Show filters" placement="bottom" enterDelay={100}>
               <div>
                 <IconButton onClick={() => toggleFilter(!showFilter)}>
-                  <FilterListIcon />
+                  <Badge
+                    variant="dot"
+                    invisible={!isFilterApplied}
+                    color="secondary"
+                  >
+                    <FilterListIcon />
+                  </Badge>
                 </IconButton>
               </div>
             </Tooltip>
