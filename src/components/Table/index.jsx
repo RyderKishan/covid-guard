@@ -37,7 +37,8 @@ const paginationOptions = [10, 20, 50, 100];
 const Table = (props) => {
   const matches = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
-  const { rows, columns, initialExpand, pageable, showFilter } = props;
+  const { rows, columns, initialExpand, pageable, showFilter, showNumbers } =
+    props;
   const [modRows, setModRows] = React.useState(rows);
   const [collapsibleRows, setCollapsibleRows] = React.useState({});
   const [page, setPage] = React.useState(0);
@@ -107,9 +108,11 @@ const Table = (props) => {
           <MuiTable stickyHeader padding="none" size="medium">
             <TableHead>
               <TableRow>
-                <TableCell align="center">
-                  <span>No</span>
-                </TableCell>
+                {showNumbers && (
+                  <TableCell align="center" padding="checkbox">
+                    <span>No</span>
+                  </TableCell>
+                )}
                 <TableCell padding="default" align="left">
                   <Tooltip
                     title="Expand all"
@@ -128,7 +131,7 @@ const Table = (props) => {
                 {columns.map((column) => (
                   <TableCell
                     key={column.field}
-                    align={column.numeric ? 'right' : 'left'}
+                    align={column.align || 'left'}
                     padding={column.disablePadding ? 'none' : 'default'}
                     sortDirection={orderBy === column.field ? order : false}
                   >
@@ -178,7 +181,7 @@ const Table = (props) => {
               {Object.keys(filter).length > 0 && modRows.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={columns.length + 2}
+                    colSpan={columns.length + (showNumbers ? 2 : 1)}
                     align="center"
                     padding="checkbox"
                   >
@@ -197,9 +200,11 @@ const Table = (props) => {
                 .map((row, index) => (
                   <React.Fragment key={row.center_id}>
                     <TableRow hover key={row.id || row.center_id}>
-                      <TableCell padding="checkbox" align="center">
-                        <span>{index + 1}</span>
-                      </TableCell>
+                      {showNumbers && (
+                        <TableCell padding="checkbox" align="center">
+                          <span>{index + 1}</span>
+                        </TableCell>
+                      )}
                       <TableCell padding="default" align="center">
                         <IconButton
                           aria-label="expand row"
@@ -242,7 +247,7 @@ const Table = (props) => {
                       <TableRow>
                         <TableCell
                           style={{ paddingBottom: 0, paddingTop: 0 }}
-                          colSpan={columns.length + 2}
+                          colSpan={columns.length + (showNumbers ? 2 : 1)}
                         >
                           <Collapse
                             in={collapsibleRows[row.center_id]}
@@ -351,6 +356,7 @@ export default Table;
 
 Table.defaultProps = {
   rows: [],
+  showNumbers: true,
   showFilter: true,
   pageable: true,
   initialExpand: false,
@@ -359,6 +365,7 @@ Table.defaultProps = {
 
 Table.propTypes = {
   rows: PropTypes.arrayOf(PropTypes.shape({})),
+  showNumbers: PropTypes.bool,
   showFilter: PropTypes.bool,
   pageable: PropTypes.bool,
   initialExpand: PropTypes.bool,

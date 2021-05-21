@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import { v4 as uuid } from 'uuid';
 import { useTheme } from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 import { useQuery, useQueries, useMutation } from 'react-query';
-import { v4 as uuid } from 'uuid';
+
+import { filterCenters } from '../containers/Home/utils';
 
 import { get } from '../api';
 
@@ -79,7 +81,39 @@ export const useCenters = (district = [], dateRange) => {
   return useQueries(queries);
 };
 
-export const useSearchCenters = (setSnack) =>
+export const useMonitorCenters = (filters, isMonitoring) => {
+  const { district = [], dateRange = '', monitorInterval = 30 } = filters;
+  return useQuery(
+    ['monitor', dateRange],
+    async () => {
+      if (!dateRange || (district && district.length === 0))
+        return { id: uuid(), centers: [] };
+      const allResponse = await Promise.all(
+        district.map((dI) =>
+          get(
+            `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${dI}&date=${dateRange}`
+          )
+        )
+      );
+      const allCenters = [];
+      allResponse.forEach((resp) => {
+        allCenters.push(...(resp.centers || []));
+      });
+      const filteredCenters = filterCenters(allCenters, filters);
+      return {
+        id: uuid(),
+        centers: filteredCenters
+      };
+    },
+    {
+      enabled: Boolean(dateRange) && isMonitoring,
+      refetchInterval: monitorInterval * 1000,
+      refetchIntervalInBackground: true
+    }
+  );
+};
+
+export const useSearchCenters = (setSnack = () => {}) =>
   useMutation(
     async ({ payload }) => {
       const { district = [], dateRange = '' } = payload;
@@ -102,13 +136,11 @@ export const useSearchCenters = (setSnack) =>
         actions.setSubmitting(false);
         if (response && response.length > 0) {
           setSnack({
-            id: uuid(),
             severity: 'success',
             message: `${response.length} results found`
           });
         } else {
           setSnack({
-            id: uuid(),
             severity: 'warning',
             message: 'No data available'
           });
@@ -118,7 +150,6 @@ export const useSearchCenters = (setSnack) =>
       onError: (error, { actions }) => {
         actions.setSubmitting(false);
         setSnack({
-          id: uuid(),
           severity: 'error',
           message: 'Failed to fetch'
         });

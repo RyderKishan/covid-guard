@@ -13,7 +13,7 @@ import Select from '@material-ui/core/Select';
 import { useDistricts } from '../../hooks';
 
 const DistrictSelect = (props) => {
-  const { formik } = props;
+  const { formik, fullWidth } = props;
   const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(
     formik.values.state
   );
@@ -21,6 +21,10 @@ const DistrictSelect = (props) => {
   districts.forEach((district) => {
     allDistricts[district.district_id] = district;
   });
+
+  const isSelectAll =
+    formik.values.district &&
+    formik.values.district.length === districts.length;
   return (
     <FormControl
       disabled={!formik.values.state}
@@ -34,6 +38,7 @@ const DistrictSelect = (props) => {
         id="district"
         name="district"
         multiple
+        fullWidth={fullWidth}
         value={formik.values.district}
         inputProps={{ readOnly: isLoadingDistricts }}
         input={<Input />}
@@ -44,9 +49,34 @@ const DistrictSelect = (props) => {
             )
             .join(', ')
         }
-        onChange={(event) => formik.handleChange(event)}
+        onChange={(event) => {
+          const { value } = event.target;
+          if (value && value.length > 0 && value[value.length - 1] === 'all') {
+            let allValues = [];
+            if (!isSelectAll) {
+              allValues = districts.map(({ district_id: dI }) => dI);
+            }
+            formik.handleChange({
+              ...event,
+              target: { ...event.target, value: allValues }
+            });
+          } else {
+            formik.handleChange(event);
+          }
+        }}
         displayEmpty
       >
+        <MenuItem value="all">
+          <Checkbox
+            checked={isSelectAll}
+            indeterminate={
+              formik.values.district &&
+              formik.values.district.length > 0 &&
+              formik.values.district.length < districts.length
+            }
+          />
+          <ListItemText primary="Select all" />
+        </MenuItem>
         {districts.map(({ district_id: dI, district_name: dN }) => (
           <MenuItem key={dI} value={dI}>
             <Checkbox checked={(formik.values.district || []).includes(dI)} />
@@ -62,10 +92,12 @@ const DistrictSelect = (props) => {
 };
 
 DistrictSelect.defaultProps = {
+  fullWidth: false,
   formik: {}
 };
 
 DistrictSelect.propTypes = {
+  fullWidth: PropTypes.bool,
   formik: PropTypes.any
 };
 

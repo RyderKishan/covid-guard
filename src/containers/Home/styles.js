@@ -35,6 +35,10 @@ export const Paper = styled(MuiPaper)`
 
 export const HomeContainer = styled.section`
   height: 100%;
+  & > .fab {
+    bottom: ${({ theme }) => theme.spacing(11)}px;
+    right: ${({ theme }) => theme.spacing(4)}px;
+  }
 `;
 
 export const DisplaySection = styled.div`

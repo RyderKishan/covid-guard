@@ -9,15 +9,18 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 
+import { useLocalStorage } from '../../hooks';
+import Snackbar from '../../components/Snackbar';
 import FallBack from '../../components/Fallback';
 import Home from '../Home';
-import { useLocalStorage } from '../../hooks';
+import Monitor from '../Monitor';
 
 const CovidGuard = () => {
   const [initialOpen, setInitialOpen] = useLocalStorage(
     'welcome-message',
     true
   );
+  const [snackData, setSnack] = React.useState({});
   return (
     <>
       <Dialog
@@ -43,6 +46,7 @@ const CovidGuard = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar snack={snackData} />
       <AppBar position="static">
         <Toolbar>
           <Typography variant="h6" noWrap>
@@ -52,8 +56,12 @@ const CovidGuard = () => {
       </AppBar>
       <article>
         <Switch>
-          <Route path="/" exact component={Home} />
-          <Route path="/new" exact render={() => <div>new</div>} />
+          <Route path="/" exact render={() => <Home setSnack={setSnack} />} />
+          <Route
+            path="/monitor"
+            exact
+            render={() => <Monitor setSnack={setSnack} />}
+          />
           <Route component={FallBack} />
         </Switch>
       </article>

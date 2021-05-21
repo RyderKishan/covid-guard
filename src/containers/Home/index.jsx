@@ -8,19 +8,20 @@ import LinearProgress from '@material-ui/core/LinearProgress';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Hidden from '@material-ui/core/Hidden';
 import Modal from '@material-ui/core/Modal';
+import Button from '@material-ui/core/Button';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import Badge from '@material-ui/core/Badge';
 import FilterListIcon from '@material-ui/icons/FilterList';
-import Snackbar from '@material-ui/core/Snackbar';
 import SearchIcon from '@material-ui/icons/Search';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import DoneIcon from '@material-ui/icons/Done';
 import CloseIcon from '@material-ui/icons/Close';
 import Tooltip from '@material-ui/core/Tooltip';
-import Alert from '@material-ui/lab/Alert';
+import PostAddIcon from '@material-ui/icons/PostAdd';
 
+import MonitorDialog from '../../components/MonitorDialog';
 import Table from '../../components/Table';
 import Filter from '../../components/Filter';
 import SearchCriteria from '../../components/SearchCriteria';
@@ -36,7 +37,7 @@ const Home = () => {
     push
   } = useHistory();
 
-  const [snack, setSnack] = React.useState({});
+  const [showMonitorDialog, toggleMonitoDialog] = React.useState(false);
   const [showSearch, toggleSearch] = React.useState(false);
   const [showFilter, toggleFilter] = React.useState(false);
   const [filters, setFilters] = React.useState(defaultFilters);
@@ -51,23 +52,6 @@ const Home = () => {
   const { data: states = [], isLoading: isLoadingStates } = useStates();
 
   let isLoadingCenters = false;
-
-  const handleClose = (event, reason = '') => {
-    switch (reason) {
-      case 'clickaway':
-      case 'timeout':
-        setSnack({
-          ...snack,
-          id: undefined
-        });
-        break;
-      default:
-        setSnack({
-          ...snack,
-          id: undefined
-        });
-    }
-  };
 
   const onSearch = (newCriteria, actions) => {
     toggleSearch(false);
@@ -129,19 +113,13 @@ const Home = () => {
       <Helmet>
         <title>Covid Guard</title>
       </Helmet>
-      <Snackbar
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center'
-        }}
-        open={Boolean(snack.id)}
-        onClose={handleClose}
-        autoHideDuration={6000}
-      >
-        <Alert onClose={handleClose} severity={snack.severity}>
-          {snack.message}
-        </Alert>
-      </Snackbar>
+      <MonitorDialog
+        formik={formik}
+        states={states}
+        filters={filters}
+        showMonitorDialog={showMonitorDialog}
+        toggleMonitoDialog={toggleMonitoDialog}
+      />
       <Paper>
         {isLoadingStates && <LinearProgress />}
         <Toolbar className="toolbar">
@@ -161,6 +139,24 @@ const Home = () => {
             </div>
           </Hidden>
           <div className="actions">
+            <Hidden mdUp>
+              <Tooltip
+                title="Create monitor"
+                placement="bottom"
+                enterDelay={100}
+              >
+                <div>
+                  <IconButton onClick={() => toggleMonitoDialog(true)}>
+                    <PostAddIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
+            </Hidden>
+            <Hidden smDown>
+              <Button color="primary" onClick={() => toggleMonitoDialog(true)}>
+                Create monitor
+              </Button>
+            </Hidden>
             <Tooltip title="Search" placement="bottom" enterDelay={100}>
               <div>
                 <IconButton
