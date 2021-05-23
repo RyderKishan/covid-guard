@@ -260,7 +260,11 @@ const Home = (props) => {
             <CircularProgress color="secondary" />
           </Center>
         ) : (
-          <Table rows={filteredCenters} columns={columns} />
+          <Table
+            totalCount={centers.length}
+            rows={filteredCenters}
+            columns={columns}
+          />
         )}
       </Paper>
     </HomeContainer>

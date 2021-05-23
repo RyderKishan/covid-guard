@@ -48,15 +48,15 @@ const MonitorDialog = (props) => {
   const monitorFormik = useFormik({
     validationSchema: Yup.object().shape({
       name: Yup.string(),
-      monitorInterval: Yup.number().min(
-        30,
-        'Minimum of 30 seconds interval required'
-      )
+      monitorInterval: Yup.number()
+        .positive('Interval should be positive')
+        .moreThan(30, 'Minimum of 30 seconds interval required')
     }),
+    validateOnMount: true,
     enableReinitialize: true,
     initialValues: {
       name: '',
-      monitorInterval: 30
+      monitorInterval: 60
     }
   });
 

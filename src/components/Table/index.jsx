@@ -37,8 +37,15 @@ const paginationOptions = [10, 20, 50, 100];
 const Table = (props) => {
   const matches = useMediaQuery((theme) => theme.breakpoints.up('sm'));
 
-  const { rows, columns, initialExpand, pageable, showFilter, showNumbers } =
-    props;
+  const {
+    rows,
+    columns,
+    initialExpand,
+    pageable,
+    showFilter,
+    showNumbers,
+    totalCount
+  } = props;
   const [modRows, setModRows] = React.useState(rows);
   const [collapsibleRows, setCollapsibleRows] = React.useState({});
   const [page, setPage] = React.useState(0);
@@ -295,7 +302,9 @@ const Table = (props) => {
         ) : (
           <Center>
             <Typography align="center" color="textPrimary" variant="overline">
-              Try a new search
+              {totalCount > 0
+                ? 'No results for this filter'
+                : 'Try a new search'}
             </Typography>
           </Center>
         )}
@@ -358,6 +367,7 @@ export default Table;
 
 Table.defaultProps = {
   rows: [],
+  totalCount: 0,
   showNumbers: true,
   showFilter: true,
   pageable: true,
@@ -367,6 +377,7 @@ Table.defaultProps = {
 
 Table.propTypes = {
   rows: PropTypes.arrayOf(PropTypes.shape({})),
+  totalCount: PropTypes.number,
   showNumbers: PropTypes.bool,
   showFilter: PropTypes.bool,
   pageable: PropTypes.bool,

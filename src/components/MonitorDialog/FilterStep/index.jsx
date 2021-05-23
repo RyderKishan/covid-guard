@@ -63,13 +63,12 @@ const FilterStep = (props) => {
           idname="monitorInterval"
           label="Monitor Interval (Secs)"
           type="number"
-          error={monitorFormik.errors.monitorInterval}
+          error={Boolean(monitorFormik.errors.monitorInterval)}
           helperText={monitorFormik.errors.monitorInterval}
           fullWidth
           value={`${monitorFormik.values.monitorInterval}`}
           onChange={(event) => {
             const { value } = event.target;
-            // if (value < 30) return;
             monitorFormik.setFieldValue('monitorInterval', Number(value), true);
             monitorFormik.setFieldTouched('monitorInterval', true, true);
           }}
