@@ -1,5 +1,4 @@
 import { pathOr } from 'ramda';
-import { v4 as uuid } from 'uuid';
 import fetch from 'node-fetch';
 import CustomException from './CustomException';
 
@@ -18,10 +17,7 @@ const ErrorObject = async (response) => {
 };
 
 const headersForAllRequest = {
-  'Content-Type': 'application/json',
-  'Accept-Language': 'application/json',
-  'X-Request-ID': uuid(),
-  'X-Correlation-ID': uuid()
+  'Content-Type': 'application/json'
 };
 
 const get = async (endpoint, headers, options = {}) => {
