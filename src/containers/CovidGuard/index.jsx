@@ -1,6 +1,7 @@
 import React from 'react';
-import { withRouter, Route, Switch } from 'react-router-dom';
-import Toolbar from '@material-ui/core/Toolbar';
+import styled from 'styled-components';
+import { withRouter, Route, Switch, useHistory } from 'react-router-dom';
+import MuiToolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import AppBar from '@material-ui/core/AppBar';
 import Button from '@material-ui/core/Button';
@@ -9,17 +10,20 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import DialogContent from '@material-ui/core/DialogContent';
 import DialogActions from '@material-ui/core/DialogActions';
 
-import { useLocalStorage } from '../../hooks';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import Breadcrumbs from '../../components/Breadcrumbs';
 import Snackbar from '../../components/Snackbar';
 import FallBack from '../../components/Fallback';
 import Home from '../Home';
 import Monitor from '../Monitor';
+import About from '../About';
 
 const CovidGuard = () => {
   const [initialOpen, setInitialOpen] = useLocalStorage(
     'welcome-message',
     true
   );
+  const { push } = useHistory();
   const [snackData, setSnack] = React.useState({});
   return (
     <>
@@ -52,11 +56,22 @@ const CovidGuard = () => {
           <Typography variant="h6" noWrap>
             Covid Guard
           </Typography>
+          <Breadcrumbs />
+          <div className="spacer" />
+          <nav className="links">
+            <li>
+              <Typography onClick={() => push('/')}>Search</Typography>
+            </li>
+            <li>
+              <Typography onClick={() => push('/about')}>About</Typography>
+            </li>
+          </nav>
         </Toolbar>
       </AppBar>
       <article>
         <Switch>
           <Route path="/" exact render={() => <Home setSnack={setSnack} />} />
+          <Route path="/about" exact component={About} />
           <Route
             path="/monitor"
             exact
@@ -70,3 +85,24 @@ const CovidGuard = () => {
 };
 
 export default withRouter(CovidGuard);
+
+const Toolbar = styled(MuiToolbar)`
+  display: flex;
+  & > nav.links {
+    display: flex;
+    align-items: center;
+    & > li {
+      cursor: pointer;
+      :hover {
+        text-decoration: underline;
+      }
+      display: block;
+    }
+    & > :not(:last-child) {
+      margin-right: ${({ theme }) => theme.spacing(2)}px;
+    }
+  }
+  & > div.spacer {
+    flex: 1;
+  }
+`;

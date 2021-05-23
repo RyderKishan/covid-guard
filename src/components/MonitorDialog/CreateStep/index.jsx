@@ -49,7 +49,7 @@ const CreateStep = (props) => {
       </Button>
       {monitorFormik.values.name && (
         <Typography className="link" variant="caption" paragraph>
-          {`${window.location.href}monitor?${paramString}`}
+          {`${window.location.origin}/monitor?${paramString}`}
         </Typography>
       )}
     </StepContent>

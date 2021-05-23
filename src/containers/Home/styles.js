@@ -5,8 +5,18 @@ export const Paper = styled(MuiPaper)`
   height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  & > .lp {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    top: 0;
+  }
   & > .toolbar {
     & > .actions {
+      & > button {
+        margin-right: ${({ theme }) => theme.spacing(1)}px;
+      }
       .up {
         transform: rotate(-180deg);
         transition: transform

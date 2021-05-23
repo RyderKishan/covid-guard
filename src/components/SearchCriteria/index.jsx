@@ -11,7 +11,7 @@ import { dateRanges } from '../../containers/Home/constants';
 import { SearchCriteriaFields } from './styles';
 
 const SearchCriteria = (props) => {
-  const { states, formik, fullWidth } = props;
+  const { states, formik, fullWidth, setSnack } = props;
   return (
     <SearchCriteriaFields fullWidth={fullWidth}>
       <FormControl
@@ -41,7 +41,7 @@ const SearchCriteria = (props) => {
           <FormHelperText>{formik.errors.state}</FormHelperText>
         )}
       </FormControl>
-      <DistrictSelect formik={formik} />
+      <DistrictSelect setSnack={setSnack} formik={formik} />
       <FormControl
         error={Boolean(formik.submitCount > 0 && formik.errors.dateRange)}
       >
@@ -73,12 +73,14 @@ const SearchCriteria = (props) => {
 };
 
 SearchCriteria.defaultProps = {
+  setSnack: () => {},
   fullWidth: false,
   formik: {},
   states: []
 };
 
 SearchCriteria.propTypes = {
+  setSnack: PropTypes.func,
   fullWidth: PropTypes.bool,
   formik: PropTypes.any,
   states: PropTypes.array

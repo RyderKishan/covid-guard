@@ -1,4 +1,5 @@
 import { pathOr } from 'ramda';
+import { v4 as uuid } from 'uuid';
 import fetch from 'node-fetch';
 import CustomException from './CustomException';
 
@@ -16,9 +17,16 @@ const ErrorObject = async (response) => {
   return error;
 };
 
+const headersForAllRequest = {
+  'Content-Type': 'application/json',
+  'Accept-Language': 'application/json',
+  'X-Request-ID': uuid(),
+  'X-Correlation-ID': uuid()
+};
+
 const get = async (endpoint, headers, options = {}) => {
   const commonHeaders = {
-    'Content-Type': 'application/json'
+    ...headersForAllRequest
   };
   const commonOptions = {
     method: 'GET',
@@ -37,7 +45,7 @@ const get = async (endpoint, headers, options = {}) => {
 
 const del = async (endpoint, headers, options = {}) => {
   const commonHeaders = {
-    'Content-Type': 'application/json'
+    ...headersForAllRequest
   };
   const commonOptions = {
     method: 'DELETE',
@@ -56,7 +64,7 @@ const del = async (endpoint, headers, options = {}) => {
 
 const post = async (endpoint, body, headers, options = {}) => {
   const commonHeaders = {
-    'Content-Type': 'application/json'
+    ...headersForAllRequest
   };
   const commonOptions = {
     method: 'POST',
@@ -76,7 +84,7 @@ const post = async (endpoint, body, headers, options = {}) => {
 
 const put = async (endpoint, body, headers, options = {}) => {
   const commonHeaders = {
-    'Content-Type': 'application/json'
+    ...headersForAllRequest
   };
   const commonOptions = {
     method: 'PUT',

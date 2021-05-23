@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import * as Yup from 'yup';
 import { useHistory } from 'react-router-dom';
 import { useFormik } from 'formik';
@@ -31,7 +32,8 @@ import { filterCenters, getParamsFromSearch, setUrlParams } from './utils';
 import { HomeContainer, Paper, Center, ModalContent } from './styles';
 import { columns, defaultFilters, defaultSearchCriteria } from './constants';
 
-const Home = () => {
+const Home = (props) => {
+  const { setSnack } = props;
   const {
     location: { pathname, search },
     push
@@ -49,7 +51,7 @@ const Home = () => {
     searchCriteria.district,
     searchCriteria.dateRange
   );
-  const { data: states = [], isLoading: isLoadingStates } = useStates();
+  const { data: states = [], isLoading: isLoadingStates } = useStates(setSnack);
 
   let isLoadingCenters = false;
 
@@ -121,14 +123,22 @@ const Home = () => {
         toggleMonitoDialog={toggleMonitoDialog}
       />
       <Paper>
-        {isLoadingStates && <LinearProgress />}
+        {isLoadingStates && <LinearProgress className="lp" />}
         <Toolbar className="toolbar">
           <Hidden smDown>
-            <SearchCriteria states={states} formik={formik} />
+            <SearchCriteria
+              setSnack={setSnack}
+              states={states}
+              formik={formik}
+            />
           </Hidden>
           <Hidden mdUp>
             <div className="actions">
-              <Tooltip title="Show search" placement="bottom" enterDelay={100}>
+              <Tooltip
+                title="Toggle search"
+                placement="bottom"
+                enterDelay={100}
+              >
                 <IconButton
                   className={showSearch ? 'up' : 'down'}
                   onClick={() => toggleSearch(!showSearch)}
@@ -153,7 +163,11 @@ const Home = () => {
               </Tooltip>
             </Hidden>
             <Hidden smDown>
-              <Button color="primary" onClick={() => toggleMonitoDialog(true)}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => toggleMonitoDialog(true)}
+              >
                 Create monitor
               </Button>
             </Hidden>
@@ -171,7 +185,7 @@ const Home = () => {
                 </IconButton>
               </div>
             </Tooltip>
-            <Tooltip title="Show filters" placement="bottom" enterDelay={100}>
+            <Tooltip title="Toggle filters" placement="bottom" enterDelay={100}>
               <div>
                 <IconButton onClick={() => toggleFilter(!showFilter)}>
                   <Badge
@@ -251,6 +265,14 @@ const Home = () => {
       </Paper>
     </HomeContainer>
   );
+};
+
+Home.defaultProps = {
+  setSnack: () => {}
+};
+
+Home.propTypes = {
+  setSnack: PropTypes.func
 };
 
 export default Home;

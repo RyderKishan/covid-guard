@@ -4,7 +4,7 @@ export const schema = Yup.object().shape({
   state: Yup.number().required(),
   name: Yup.string().required(),
   dateRange: Yup.string().required().length(10),
-  monitorInterval: Yup.number().required().min(1),
+  monitorInterval: Yup.number().required().min(30),
   district: Yup.array().of(Yup.number()).required().min(1),
   date: Yup.string().default(''),
   minAgeLimit: Yup.array().of(Yup.number()).nullable().default([]),

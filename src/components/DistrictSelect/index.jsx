@@ -13,9 +13,10 @@ import Select from '@material-ui/core/Select';
 import { useDistricts } from '../../hooks';
 
 const DistrictSelect = (props) => {
-  const { formik, fullWidth } = props;
+  const { formik, fullWidth, setSnack } = props;
   const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(
-    formik.values.state
+    formik.values.state,
+    setSnack
   );
   const allDistricts = {};
   districts.forEach((district) => {
@@ -92,11 +93,13 @@ const DistrictSelect = (props) => {
 };
 
 DistrictSelect.defaultProps = {
+  setSnack: () => {},
   fullWidth: false,
   formik: {}
 };
 
 DistrictSelect.propTypes = {
+  setSnack: PropTypes.func,
   fullWidth: PropTypes.bool,
   formik: PropTypes.any
 };

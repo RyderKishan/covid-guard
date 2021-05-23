@@ -16,22 +16,18 @@ export const Paper = styled(MuiPaper)`
     background-color: ${({ theme }) => theme.palette.success.main};
     color: ${({ theme }) => theme.palette.success.contrastText};
   }
-  .full-height {
-    min-height: 100%;
+  &.full-height {
+    min-height: calc(100% - ${({ theme }) => theme.spacing(4)}px);
+  }
+  &.center {
+    display: grid;
+    place-content: center;
   }
   & > .lp {
     position: absolute;
     width: 100%;
     left: 0;
     top: 0;
-  }
-  & > div.top-bar {
-    display: flex;
-    overflow: auto;
-    & > div:not(:last-child) {
-      margin-right: ${({ theme }) => theme.spacing(2)}px;
-      border-right: 1px solid ${({ theme }) => theme.palette.divider};
-    }
   }
   & > div.control-actions {
     & > div.action-buttons {
@@ -55,18 +51,32 @@ export const MonitorContainer = styled.section`
   }
 `;
 
-export const Center = styled.div`
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-content: center;
-`;
-
 export const Error = styled.div`
   display: flex;
   padding: ${({ theme }) => theme.spacing(2)}px;
   & > div:not(:last-child) {
     margin-right: ${({ theme }) => theme.spacing(2)}px;
+  }
+`;
+
+export const ConsoleContainer = styled.div`
+  padding: ${({ theme }) => theme.spacing(2)}px;
+  height: ${({ theme }) => theme.spacing(30)}px;
+  font-family: monospace;
+  overflow: auto;
+  & > div.row {
+    & > span {
+      margin-right: ${({ theme }) => theme.spacing(1)}px;
+    }
+  }
+`;
+
+export const TombstoneContainer = styled.section`
+  display: flex;
+  overflow: auto;
+  & > div:not(:last-child) {
+    margin-right: ${({ theme }) => theme.spacing(2)}px;
+    border-right: 1px solid ${({ theme }) => theme.palette.divider};
   }
 `;
 
@@ -97,18 +107,6 @@ export const ChipData = styled.div`
         theme.typography.overline.letterSpacing}em;
       text-transform: ${({ theme }) => theme.typography.overline.textTransform};
       color: ${({ theme }) => theme.palette.text.primary};
-    }
-  }
-`;
-
-export const Console = styled.div`
-  padding: ${({ theme }) => theme.spacing(2)}px;
-  height: ${({ theme }) => theme.spacing(30)}px;
-  font-family: monospace;
-  overflow: auto;
-  & > div.row {
-    & > span {
-      margin-right: ${({ theme }) => theme.spacing(1)}px;
     }
   }
 `;

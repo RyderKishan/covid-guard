@@ -1,5 +1,4 @@
 import React from 'react';
-// import PropTypes from 'prop-types';
 import Typography from '@material-ui/core/Typography';
 
 import { StepContent } from '../styles';
@@ -16,13 +15,5 @@ const InfoStep = () => (
     </Typography>
   </StepContent>
 );
-
-// InfoStep.defaultProps = {
-//   formik: {}
-// };
-
-// InfoStep.propTypes = {
-//   formik: PropTypes.any
-// };
 
 export default InfoStep;

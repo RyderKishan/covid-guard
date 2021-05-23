@@ -27,7 +27,8 @@ export const TableContainer = styled.div`
     flex: 1;
     overflow: auto;
   }
-  th, td {
+  th,
+  td {
     white-space: nowrap;
   }
   td > span.data-fee_type {

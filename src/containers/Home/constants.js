@@ -52,4 +52,3 @@ export const defaultSearchCriteria = {
   district: [],
   dateRange: dateRanges[0].value
 };
-

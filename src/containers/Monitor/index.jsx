@@ -1,54 +1,27 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import { useLocation } from 'react-router-dom';
-import moment from 'moment';
 import { pick } from 'ramda';
 import { Helmet } from 'react-helmet';
 import queryString from 'query-string';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import Tooltip from '@material-ui/core/Tooltip';
-import Button from '@material-ui/core/Button';
-import LinearProgress from '@material-ui/core/LinearProgress';
-import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import InfoIcon from '@material-ui/icons/Info';
-import ErrorIcon from '@material-ui/icons/Error';
-import CancelIcon from '@material-ui/icons/Cancel';
-import EventIcon from '@material-ui/icons/Event';
-import NotificationsActiveIcon from '@material-ui/icons/NotificationsActive';
-import NotificationsOffIcon from '@material-ui/icons/NotificationsOff';
-import WatchLaterIcon from '@material-ui/icons/WatchLater';
-import PauseCircleFilledIcon from '@material-ui/icons/PauseCircleFilled';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import AutorenewIcon from '@material-ui/icons/Autorenew';
-import TimerIcon from '@material-ui/icons/Timer';
-import StopIcon from '@material-ui/icons/Stop';
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
-import MapIcon from '@material-ui/icons/Map';
-import RoomIcon from '@material-ui/icons/Room';
-import LocalHospitalIcon from '@material-ui/icons/LocalHospital';
-import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
-import PersonIcon from '@material-ui/icons/Person';
-import ScheduleIcon from '@material-ui/icons/Schedule';
 
 import { notify } from '../../utils';
 import { schema, filterFields, botStatuses } from './constants';
-import {
-  MonitorContainer,
-  Paper,
-  Center,
-  Error,
-  ChipData,
-  Console
-} from './styles';
+import { MonitorContainer, Paper, Error } from './styles';
 import { useDistricts, useMonitorCenters, useStates } from '../../hooks';
-import {
-  feeTypes,
-  minAgeLimits,
-  vaccines
-} from '../../components/Filter/constants';
+import useBeforeUnload from '../../hooks/useBeforeUnload';
 import Table from '../../components/Table';
-import { columns, dateRanges } from '../Home/constants';
+import { columns } from '../Home/constants';
+import Status from './Tombstone/Status';
+import Filters from './Tombstone/Filters';
+import Found from './Cards/Found';
+import Resume from './Cards/Resume';
+import Pause from './Cards/Pause';
+import Stop from './Cards/Stop';
+import Console from './Console';
 
 const Monitor = (props) => {
   const { setSnack } = props;
@@ -65,17 +38,34 @@ const Monitor = (props) => {
   const [isValidating, setValidating] = React.useState(true);
   const [values, setValues] = React.useState({});
 
+  useBeforeUnload(['resume', 'pause'].includes(botStatus));
+
+  const useCenter = useMonitorCenters(
+    values,
+    botStatus === 'resume' && !isVaccineFound,
+    setSnack
+  );
+  const {
+    data: states = [],
+    isLoading: isLoadingStates,
+    isError: isStatesError
+  } = useStates(setSnack);
+  const {
+    data: districts = [],
+    isLoading: isLoadingDistricts,
+    isError: isDistrictsError
+  } = useDistricts(values.state, setSnack);
   const {
     data = {},
+    error = {},
     isLoading,
     isSuccess,
+    isError,
+    isIdle,
     isFetching,
+    errorUpdatedAt,
     dataUpdatedAt
-  } = useMonitorCenters(values, botStatus === 'resume' && !isVaccineFound);
-  const { data: states = [], isLoading: isLoadingStates } = useStates();
-  const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(
-    values.state
-  );
+  } = useCenter;
 
   const allDistricts = [];
   districts.forEach((district) => {
@@ -100,7 +90,7 @@ const Monitor = (props) => {
     let isValid = true;
     try {
       newValues = await schema.validateSync(qParams);
-    } catch (error) {
+    } catch (err) {
       isValid = false;
     }
     if (!isValid) {
@@ -124,64 +114,92 @@ const Monitor = (props) => {
       }
     }
     setValidating(false);
-    if (Notification.permission !== 'granted') Notification.requestPermission();
+    const isNotGranted = Notification.permission !== 'granted';
+    const newData = [...fetchResults];
+    if (isNotGranted) {
+      Notification.requestPermission();
+      newData.push({
+        dataUpdatedAt,
+        errorUpdatedAt,
+        updatedAt: dataUpdatedAt || errorUpdatedAt,
+        status: '---',
+        message: 'Notification access requested'
+      });
+    }
+    setFetchResults(newData);
   }, []);
 
-  const enableNofification = (isEnabled) => {
-    if (Notification.permission !== 'granted' && isEnabled)
-      Notification.requestPermission();
-    toggleNotification(isEnabled);
-  };
-
   React.useEffect(() => {
-    if (!isLoading && !isFetching && dataUpdatedAt > 0) {
+    if (!isIdle && !isLoading && !isFetching && (isError || isSuccess)) {
+      const {
+        dataUpdatedAt: oldDataUpdatedAt,
+        errorUpdatedAt: oldErrorUpdatedAt
+      } = fetchResults.length > 0 ? fetchResults[fetchResults.length - 1] : {};
+      if (
+        oldDataUpdatedAt === dataUpdatedAt &&
+        oldErrorUpdatedAt === errorUpdatedAt
+      )
+        return;
       const newData = [...fetchResults];
       newData.push({
         dataUpdatedAt,
-        timeStamp: moment(new Date(dataUpdatedAt)).format(
-          'DD-MM-YYYY hh:mm:ss A'
-        ),
-        message: `${isSuccess ? ' OK' : 'ERR'}`
+        errorUpdatedAt,
+        updatedAt: dataUpdatedAt || errorUpdatedAt,
+        status: isSuccess ? 200 : error.status || 500,
+        message: `${isSuccess ? 'SUCCESS' : 'FAILURE'}`
       });
       setFetchResults(newData);
       if (data && data.centers && data.centers.length > 1) {
         setBotStatus('found');
         setIsVaccineFound(true);
-        notify(
-          'Vaccines found',
-          'Covid Guard Bot has found a vaccine for you!'
-        );
+        notify('Vaccines found', 'we have found a vaccine for you!');
       }
     }
-  }, [data]);
+  }, [useCenter]);
 
   if (isLoadingDistricts || isValidating || isLoadingStates)
     return (
-      <Paper className="full-height">
-        <Center>
-          <CircularProgress color="secondary" />
-        </Center>
+      <Paper className="full-height center">
+        <CircularProgress color="secondary" />
+      </Paper>
+    );
+
+  if (isStatesError || isDistrictsError)
+    return (
+      <Paper className="full-height center">
+        <Error>
+          <div>
+            <InfoIcon />
+          </div>
+          <div>
+            <Typography variant="body1" paragraph>
+              Error - Too much request
+            </Typography>
+            <Typography variant="caption">
+              (Note): The monitoring tool is unavailable right now. Please try
+              after 10 minutes
+            </Typography>
+          </div>
+        </Error>
       </Paper>
     );
 
   if (isParamError)
     return (
-      <Paper className="full-height">
-        <Center>
-          <Error>
-            <div>
-              <InfoIcon />
-            </div>
-            <div>
-              <Typography variant="body1" paragraph>
-                Error - Link is invalid
-              </Typography>
-              <Typography variant="caption">
-                (Note): Please genetare a new monitor from the search page
-              </Typography>
-            </div>
-          </Error>
-        </Center>
+      <Paper className="full-height center">
+        <Error>
+          <div>
+            <InfoIcon />
+          </div>
+          <div>
+            <Typography variant="body1" paragraph>
+              Error - Link is invalid
+            </Typography>
+            <Typography variant="caption">
+              (Note): Please genetare a new monitor from the search page
+            </Typography>
+          </div>
+        </Error>
       </Paper>
     );
 
@@ -191,232 +209,34 @@ const Monitor = (props) => {
         <title>{`Covid Guard Bot - ${botStatuses[botStatus]}`}</title>
       </Helmet>
       <Paper>
-        <div className="top-bar">
-          <ChipData>
-            {isVaccineFound ? <CheckCircleIcon /> : <CancelIcon />}
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Vaccine
-              </div>
-              <div className="value" variant="overline">
-                {isVaccineFound ? 'Available' : 'Unavailable'}
-              </div>
-            </div>
-          </ChipData>
-          <ChipData>
-            {botStatus === 'error' && <ErrorIcon />}
-            {botStatus === 'resume' && <AutorenewIcon />}
-            {botStatus === 'pause' && <PauseCircleFilledIcon />}
-            {botStatus === 'stop' && <StopIcon />}
-            {botStatus === 'found' && <CheckCircleIcon />}
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Status
-              </div>
-              <div className="value" variant="overline">
-                {botStatuses[botStatus]}
-              </div>
-            </div>
-          </ChipData>
-          <ChipData>
-            <ScheduleIcon />
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Started
-              </div>
-              <div className="value" variant="overline">
-                {moment(startDate).format('D MMM h:mm A')}
-              </div>
-            </div>
-          </ChipData>
-          {isVaccineFound && (
-            <ChipData>
-              <WatchLaterIcon />
-              <div className="details">
-                <div className="key" color="textSecondary">
-                  Completed
-                </div>
-                <div className="value" variant="overline">
-                  {moment(new Date(dataUpdatedAt)).format('D MMM h:mm A')}
-                </div>
-              </div>
-            </ChipData>
-          )}
-          <ChipData>
-            <TimerIcon />
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Monitor Interval
-              </div>
-              <div className="value" variant="overline">
-                {`${values.monitorInterval} Seconds`}
-              </div>
-            </div>
-          </ChipData>
-        </div>
+        <Status
+          isVaccineFound={isVaccineFound}
+          botStatus={botStatus}
+          startDate={startDate}
+          dataUpdatedAt={dataUpdatedAt}
+          values={values}
+        />
       </Paper>
       <Paper>
-        <div className="top-bar">
-          <ChipData>
-            <RoomIcon />
-            <div className="details">
-              <div className="key" color="textSecondary">
-                State
-              </div>
-              <div className="value" variant="overline">
-                {allStates[values.state].state_name}
-              </div>
-            </div>
-          </ChipData>
-          <ChipData>
-            <MapIcon />
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Districts
-              </div>
-              <Tooltip
-                title={values.district
-                  .map((d) => allDistricts[d].district_name)
-                  .join(', ')}
-                placement="bottom"
-                enterDelay={100}
-              >
-                <div className="value" variant="overline">
-                  {values.district.length} Selected
-                </div>
-              </Tooltip>
-            </div>
-          </ChipData>
-          {values.vaccine.length > 0 && (
-            <ChipData>
-              <LocalHospitalIcon />
-              <div className="details">
-                <div className="key" color="textSecondary">
-                  Vaccines
-                </div>
-                <div className="value" variant="overline">
-                  {vaccines
-                    .filter((v) => values.vaccine.includes(v.value))
-                    .map((v) => v.label)
-                    .join(', ')}
-                </div>
-              </div>
-            </ChipData>
-          )}
-          {values.minAgeLimit.length > 0 && (
-            <ChipData>
-              <PersonIcon />
-              <div className="details">
-                <div className="key" color="textSecondary">
-                  Min Age Limit
-                </div>
-                <div className="value" variant="overline">
-                  {minAgeLimits
-                    .filter((v) => values.minAgeLimit.includes(v.value))
-                    .map((v) => v.label)
-                    .join(', ')}
-                </div>
-              </div>
-            </ChipData>
-          )}
-          {values.feeType.length > 0 && (
-            <ChipData>
-              <AttachMoneyIcon />
-              <div className="details">
-                <div className="key" color="textSecondary">
-                  Fee Type
-                </div>
-                <div className="value" variant="overline">
-                  {feeTypes
-                    .filter((v) => values.feeType.includes(v.value))
-                    .map((v) => v.label)
-                    .join(', ')}
-                </div>
-              </div>
-            </ChipData>
-          )}
-          <ChipData>
-            <EventIcon />
-            <div className="details">
-              <div className="key" color="textSecondary">
-                Date Range
-              </div>
-              <div className="value" variant="overline">
-                {dateRanges
-                  .filter((v) => values.dateRange.includes(v.value))
-                  .map((v) => v.label)
-                  .join(', ')}
-              </div>
-            </div>
-          </ChipData>
-        </div>
+        <Filters
+          allStates={allStates}
+          allDistricts={allDistricts}
+          values={values}
+        />
       </Paper>
-      {botStatus === 'stop' && (
-        <Paper className="stop">
-          <Typography paragraph>
-            {values.name}, The monitoring was stopped
-          </Typography>
-          <Typography paragraph>
-            We have stopped the bot to monitor the vaccines. Hope we served your
-            need!
-          </Typography>
-          <Typography variant="caption" paragraph>
-            (Note): Reload the page or go to search page to create a new
-            monitoring
-          </Typography>
-        </Paper>
-      )}
-      {botStatus === 'pause' && !isVaccineFound && (
-        <Paper className="pause">
-          <Typography paragraph>
-            {values.name}, The monitoring was paused
-          </Typography>
-          <Typography paragraph>
-            The bot will not check for any availability now. You can continue to
-            monitor by clicking on the play icon.
-          </Typography>
-          <Typography variant="caption" paragraph>
-            (Note): Reload the page or go to search page to create a new
-            monitoring
-          </Typography>
-        </Paper>
-      )}
-      {botStatus === 'resume' && !isVaccineFound && (
-        <Paper>
-          <Typography paragraph>Hi {values.name},</Typography>
-          <Typography paragraph>
-            Your browser bot will continue to monitor the vaccine availability
-            and let you know. All you need is to just relax. Make sure to create
-            an account in cowin. Once vaccines are available you have to
-            register for your dose in cowin website.
-          </Typography>
-          <Typography variant="caption" paragraph>
-            (Note): We will notify you once the vaccines are available. Please
-            enable the notifications for this site. Click allow if it asks. You
-            can trust the notifications from our site. Else you can check this
-            tab regularly to see the availability.
-          </Typography>
-        </Paper>
-      )}
-      {botStatus === 'found' && isVaccineFound && (
-        <Paper className="found">
-          <Typography paragraph>Hi {values.name},</Typography>
-          <Typography paragraph>
-            Your browser bot has found a vaccine for you.
-          </Typography>
-          <Typography variant="caption" paragraph>
-            (Note): Login to{' '}
-            <a
-              href="https://www.cowin.gov.in/"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Cowin
-            </a>{' '}
-            immediately to book your slots
-          </Typography>
-        </Paper>
-      )}
+      {botStatus === 'stop' && <Stop values={values} />}
+      {botStatus === 'pause' && !isVaccineFound && <Pause values={values} />}
+      {botStatus === 'resume' && !isVaccineFound && <Resume values={values} />}
+      {botStatus === 'found' && isVaccineFound && <Found values={values} />}
+      <Console
+        isFetching={isFetching}
+        setFetchResults={setFetchResults}
+        fetchResults={fetchResults}
+        botStatus={botStatus}
+        setBotStatus={setBotStatus}
+        showNotification={showNotification}
+        toggleNotification={toggleNotification}
+      />
       {data.centers && data.centers.length > 0 && (
         <Paper>
           <Table
@@ -427,72 +247,6 @@ const Monitor = (props) => {
           />
         </Paper>
       )}
-      <Paper>
-        {isFetching && <LinearProgress className="lp" color="secondary" />}
-        <div className="control-actions">
-          <Typography>Console</Typography>
-          <div className="action-buttons">
-            <Button color="primary" onClick={() => setFetchResults([])}>
-              Clear
-            </Button>
-            <Tooltip title="Toggle Notification" placement="bottom">
-              <IconButton onClick={() => enableNofification(!showNotification)}>
-                {showNotification ? (
-                  <NotificationsActiveIcon />
-                ) : (
-                  <NotificationsOffIcon />
-                )}
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Stop" placement="bottom">
-              <div>
-                <IconButton
-                  disabled={botStatus === 'stop' || botStatus === 'found'}
-                  onClick={() => setBotStatus('stop')}
-                >
-                  <StopIcon />
-                </IconButton>
-              </div>
-            </Tooltip>
-            <Tooltip title="Pause" placement="bottom">
-              <div>
-                <IconButton
-                  disabled={
-                    botStatus === 'stop' ||
-                    botStatus === 'pause' ||
-                    botStatus === 'found'
-                  }
-                  onClick={() => setBotStatus('pause')}
-                >
-                  <PauseCircleFilledIcon />
-                </IconButton>
-              </div>
-            </Tooltip>
-            <Tooltip title="Resume" placement="bottom">
-              <div>
-                <IconButton
-                  disabled={
-                    botStatus === 'stop' ||
-                    botStatus === 'resume' ||
-                    botStatus === 'found'
-                  }
-                  onClick={() => setBotStatus('resume')}
-                >
-                  <PlayArrowIcon />
-                </IconButton>
-              </div>
-            </Tooltip>
-          </div>
-        </div>
-        <Console>
-          {fetchResults.map((fetchResult) => (
-            <div className="row" key={fetchResult.dataUpdatedAt}>
-              <span>{fetchResult.timeStamp}</span>
-              <span>{fetchResult.message}</span>
-            </div>
-          ))}
-        </Console>
-      </Paper>
     </MonitorContainer>
   );
 };

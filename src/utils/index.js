@@ -4,7 +4,8 @@ export const notify = (
   url = 'https://www.cowin.gov.in/home'
 ) => {
   const notification = new Notification(title, {
-    body: message
+    body: message,
+    icon: `${window.location.origin}/favicon.ico`
   });
   notification.onclick = () => window.open(url);
 };

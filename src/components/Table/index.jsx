@@ -303,9 +303,11 @@ const Table = (props) => {
       {pageable && (
         <TablePagination>
           <div>
-            <Typography noWrap color="textPrimary" variant="caption">
-              {`${modRows.length} centers`}
-            </Typography>
+            {modRows.length > 0 && (
+              <Typography noWrap color="textPrimary" variant="caption">
+                {`${modRows.length} centers`}
+              </Typography>
+            )}
           </div>
           <div className="actions">
             <Hidden smDown>

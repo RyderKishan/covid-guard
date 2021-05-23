@@ -44,12 +44,14 @@ const MonitorDialog = (props) => {
     props;
 
   const [activeStep, setActiveStep] = React.useState(0);
-  // const [name, setName] = React.useState('');
 
   const monitorFormik = useFormik({
     validationSchema: Yup.object().shape({
       name: Yup.string(),
-      monitorInterval: Yup.number()
+      monitorInterval: Yup.number().min(
+        30,
+        'Minimum of 30 seconds interval required'
+      )
     }),
     enableReinitialize: true,
     initialValues: {
@@ -84,7 +86,6 @@ const MonitorDialog = (props) => {
           <FilterStep
             states={states}
             monitorFormik={monitorFormik}
-            // setName={setName}
             formik={formik}
           />
         )}
@@ -116,6 +117,7 @@ const MonitorDialog = (props) => {
             color="primary"
             disabled={
               !allSteps[activeStep].next(formik) ||
+              !monitorFormik.isValid ||
               activeStep === allSteps.length - 1
             }
             onClick={() => setActiveStep(activeStep + 1)}
