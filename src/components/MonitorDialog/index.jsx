@@ -25,10 +25,7 @@ const allSteps = [
   {
     key: 1,
     label: 'Filters',
-    next: (formik) =>
-      formik.values.district &&
-      formik.values.district.length > 0 &&
-      formik.values.district.length < 4
+    next: () => true
   },
   {
     key: 2,
@@ -116,7 +113,7 @@ const MonitorDialog = (props) => {
             variant="contained"
             color="primary"
             disabled={
-              !allSteps[activeStep].next(formik) ||
+              !allSteps[activeStep].next() ||
               !monitorFormik.isValid ||
               activeStep === allSteps.length - 1
             }
