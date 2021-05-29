@@ -31,6 +31,9 @@ export const TableContainer = styled.div`
   td {
     white-space: nowrap;
   }
+  td > button {
+    margin-right: ${({ theme }) => theme.spacing(1)}px;
+  }
   td > span.data-fee_type {
     overflow: hidden;
     white-space: nowrap;

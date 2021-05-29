@@ -47,19 +47,21 @@ const Home = (props) => {
     defaultSearchCriteria
   );
 
-  const allCenters = useCenters(
-    searchCriteria.district,
-    searchCriteria.dateRange
-  );
   const { data: states = [], isLoading: isLoadingStates } = useStates(setSnack);
-
-  let isLoadingCenters = false;
+  const {
+    data: centers = [],
+    mutate: fetchCenters,
+    isLoading: isLoadingCenters
+  } = useCenters(setSnack);
 
   const onSearch = (newCriteria, actions) => {
     toggleSearch(false);
     setUrlParams(newCriteria, filters, push, pathname);
-    setSearchCriteria(newCriteria);
-    actions.setSubmitting(false);
+    fetchCenters({
+      payload: newCriteria,
+      actions,
+      callback: () => setSearchCriteria(newCriteria)
+    });
   };
 
   const onFilter = (f) => {
@@ -90,17 +92,15 @@ const Home = (props) => {
 
   React.useEffect(() => {
     const { searchCriteria: sC, filter: f } = getParamsFromSearch(search);
-    if (!sC.state && sC.district && sC.district.length === 0)
+    if (!sC.state && sC.district && sC.district.length === 0) {
       toggleSearch(true);
-    setSearchCriteria(sC);
+      toggleFilter(true);
+    }
     setFilters(f);
+    if (sC.dateRange && sC.district && sC.district.length > 0)
+      fetchCenters({ payload: sC, callback: () => setSearchCriteria(sC) });
   }, []);
 
-  const centers = [];
-  (allCenters || []).forEach(({ data, isLoading }) => {
-    if (isLoading) isLoadingCenters = true;
-    centers.push(...(data || []));
-  });
   const filteredCenters = filterCenters(centers, filters);
 
   const isFilterApplied =
@@ -149,28 +149,6 @@ const Home = (props) => {
             </div>
           </Hidden>
           <div className="actions">
-            <Hidden mdUp>
-              <Tooltip
-                title="Create monitor"
-                placement="bottom"
-                enterDelay={100}
-              >
-                <div>
-                  <IconButton onClick={() => toggleMonitoDialog(true)}>
-                    <PostAddIcon />
-                  </IconButton>
-                </div>
-              </Tooltip>
-            </Hidden>
-            <Hidden smDown>
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => toggleMonitoDialog(true)}
-              >
-                Create monitor
-              </Button>
-            </Hidden>
             <Tooltip title="Search" placement="bottom" enterDelay={100}>
               <div>
                 <IconButton
@@ -208,6 +186,28 @@ const Home = (props) => {
                 </IconButton>
               </div>
             </Tooltip>
+            <Hidden mdUp>
+              <Tooltip
+                title="Create monitor"
+                placement="bottom"
+                enterDelay={100}
+              >
+                <div>
+                  <IconButton onClick={() => toggleMonitoDialog(true)}>
+                    <PostAddIcon />
+                  </IconButton>
+                </div>
+              </Tooltip>
+            </Hidden>
+            <Hidden smDown>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => toggleMonitoDialog(true)}
+              >
+                Create monitor
+              </Button>
+            </Hidden>
           </div>
         </Toolbar>
         <Hidden mdUp>

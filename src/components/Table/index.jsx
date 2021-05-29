@@ -21,6 +21,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
+import LocationOnIcon from '@material-ui/icons/LocationOn';
 
 import {
   DailySessions,
@@ -183,6 +184,7 @@ const Table = (props) => {
                       )}
                     </TableCell>
                   ))}
+                  <TableCell align="center" />
                 </TableRow>
               )}
               {Object.keys(filter).length > 0 && modRows.length === 0 && (
@@ -232,6 +234,38 @@ const Table = (props) => {
                       </TableCell>
                       {columns.map((column, cellIndex) => {
                         const cellValue = row[column.field] || '';
+                        if (column.field === 'center_id')
+                          return (
+                            <TableCell
+                              id={`table-row-${index}-cell-${cellIndex}`}
+                              key={column.field}
+                              align={column.align || 'left'}
+                              scope="row"
+                              padding="default"
+                            >
+                              <Tooltip
+                                title="Open in google maps"
+                                placement="bottom"
+                                enterDelay={100}
+                              >
+                                <IconButton
+                                  aria-label="expand row"
+                                  size="small"
+                                  onClick={() =>
+                                    window.open(
+                                      `https://www.google.co.in/maps/search/${`${row.name} ${row.block_name}`.replace(
+                                        ' ',
+                                        '+'
+                                      )}`
+                                    )
+                                  }
+                                >
+                                  <LocationOnIcon />
+                                </IconButton>
+                              </Tooltip>
+                              {cellValue}
+                            </TableCell>
+                          );
                         return (
                           <TableCell
                             id={`table-row-${index}-cell-${cellIndex}`}

@@ -16,7 +16,7 @@ const failureMessages = {
 
 const getErrorMessage = (location) => {
   const params = queryString.parse(location.search, {
-    arrayFormat: 'index',
+    arrayFormat: 'bracket-separator',
     parseBooleans: true,
     parseNumbers: true
   });

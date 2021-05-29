@@ -31,7 +31,7 @@ export const filterCenters = (centers = [], filters = defaultFilters) => {
 export const getParamsFromSearch = (search = '') => {
   const { state, district, dateRange, minAgeLimit, feeType, vaccine, date } =
     queryString.parse(search, {
-      arrayFormat: 'index',
+      arrayFormat: 'bracket-separator',
       parseBooleans: true,
       parseNumbers: true
     });
@@ -53,7 +53,7 @@ export const setUrlParams = (searchCriteria, filters, push, pathname) => {
   const paramString = queryString.stringify(
     { ...searchCriteria, ...filters },
     {
-      arrayFormat: 'index',
+      arrayFormat: 'bracket-separator',
       skipEmptyString: true,
       skipNull: true
     }

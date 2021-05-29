@@ -81,7 +81,7 @@ const Monitor = (props) => {
     const qParams = pick(
       filterFields,
       queryString.parse(search, {
-        arrayFormat: 'index',
+        arrayFormat: 'bracket-separator',
         parseBooleans: true,
         parseNumbers: true
       })

@@ -1,6 +1,7 @@
 import { pathOr } from 'ramda';
 import fetch from 'node-fetch';
 import CustomException from './CustomException';
+import { encode } from '../utils';
 
 const ErrorObject = async (response) => {
   const error = {
@@ -17,7 +18,8 @@ const ErrorObject = async (response) => {
 };
 
 const headersForAllRequest = {
-  'Content-Type': 'application/json'
+  'Content-Type': 'application/json',
+  'x-api-key': encode(`${new Date().valueOf()}`)
 };
 
 const get = async (endpoint, headers, options = {}) => {

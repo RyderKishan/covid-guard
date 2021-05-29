@@ -1,5 +1,6 @@
 import { v4 as uuid } from 'uuid';
-import { useQuery, useQueries, useMutation } from 'react-query';
+import { useQuery, useMutation } from 'react-query';
+import queryString from 'query-string';
 
 import { filterCenters } from '../containers/Home/utils';
 import { get } from '../api';
@@ -11,7 +12,7 @@ export const useStates = (setSnack) =>
     'states',
     async () => {
       const response = await get(
-        'https://cdn-api.co-vin.in/api/v2/admin/location/states'
+        `${process.env.REACT_APP_API_HOST}/cowin/states`
       );
       return (response && response.states) || [];
     },
@@ -31,9 +32,20 @@ export const useDistricts = (stateId, setSnack) =>
     ['districts', stateId],
     async () => {
       if (!stateId) return [];
-      const response = await get(
-        `https://cdn-api.co-vin.in/api/v2/admin/location/districts/${stateId}`
+      const url = queryString.stringifyUrl(
+        {
+          url: `${process.env.REACT_APP_API_HOST}/cowin/districts`,
+          query: {
+            state: stateId
+          }
+        },
+        {
+          arrayFormat: 'bracket-separator',
+          skipEmptyString: true,
+          skipNull: true
+        }
       );
+      const response = await get(url);
       return (response && response.districts) || [];
     },
     {
@@ -48,19 +60,55 @@ export const useDistricts = (stateId, setSnack) =>
     }
   );
 
-export const useCenters = (district = [], dateRange) => {
-  const queries = district.map((districtId) => ({
-    queryKey: ['calendarByDistrict', districtId, 'date', dateRange],
-    queryFn: async () => {
-      if (!districtId || !dateRange) return [];
-      const response = await get(
-        `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${districtId}&date=${dateRange}`
+export const useCenters = (setSnack) =>
+  useMutation(
+    async ({ payload }) => {
+      const { district = [], dateRange = '' } = payload;
+      if (!dateRange || (district && district.length === 0)) return [];
+      const url = queryString.stringifyUrl(
+        {
+          url: `${process.env.REACT_APP_API_HOST}/cowin/centers`,
+          query: {
+            district,
+            dateRange
+          }
+        },
+        {
+          arrayFormat: 'bracket-separator',
+          skipEmptyString: true,
+          skipNull: true
+        }
       );
-      return (response && response.centers) || [];
+      const allCenters = await get(url);
+      return allCenters;
+    },
+    {
+      onSuccess: (response, { actions, callback }) => {
+        if (actions) actions.setSubmitting(false);
+        if (response && response.length > 0) {
+          setSnack({
+            severity: 'success',
+            message: `${response.length} results found`
+          });
+        } else {
+          setSnack({
+            severity: 'warning',
+            message: 'No data available'
+          });
+        }
+        if (callback) callback();
+        return response;
+      },
+      onError: (error, { actions, callback }) => {
+        if (actions) actions.setSubmitting(false);
+        setSnack({
+          severity: 'error',
+          message: 'Failed to fetch'
+        });
+        if (callback) callback();
+      }
     }
-  }));
-  return useQueries(queries);
-};
+  );
 
 export const useMonitorCenters = (filters, isMonitoring, setSnack) => {
   const { district = [], dateRange = '', monitorInterval = 30 } = filters;
@@ -69,17 +117,21 @@ export const useMonitorCenters = (filters, isMonitoring, setSnack) => {
     async () => {
       if (!dateRange || (district && district.length === 0))
         return { id: uuid(), centers: [] };
-      const allResponse = await Promise.all(
-        district.map((dI) =>
-          get(
-            `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${dI}&date=${dateRange}`
-          )
-        )
+      const url = queryString.stringifyUrl(
+        {
+          url: `${process.env.REACT_APP_API_HOST}/cowin/centers`,
+          query: {
+            district,
+            dateRange
+          }
+        },
+        {
+          arrayFormat: 'bracket-separator',
+          skipEmptyString: true,
+          skipNull: true
+        }
       );
-      const allCenters = [];
-      allResponse.forEach((resp) => {
-        allCenters.push(...(resp.centers || []));
-      });
+      const allCenters = await get(url);
       const filteredCenters = filterCenters(allCenters, filters);
       return {
         id: uuid(),
@@ -104,47 +156,3 @@ export const useMonitorCenters = (filters, isMonitoring, setSnack) => {
     }
   );
 };
-
-export const useSearchCenters = (setSnack = () => {}) =>
-  useMutation(
-    async ({ payload }) => {
-      const { district = [], dateRange = '' } = payload;
-      if (!dateRange || (district && district.length === 0)) return [];
-      const allResponse = await Promise.all(
-        district.map((dI) =>
-          get(
-            `https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id=${dI}&date=${dateRange}`
-          )
-        )
-      );
-      const allCenters = [];
-      allResponse.forEach((resp) => {
-        allCenters.push(...(resp.centers || []));
-      });
-      return allCenters;
-    },
-    {
-      onSuccess: (response, { actions }) => {
-        actions.setSubmitting(false);
-        if (response && response.length > 0) {
-          setSnack({
-            severity: 'success',
-            message: `${response.length} results found`
-          });
-        } else {
-          setSnack({
-            severity: 'warning',
-            message: 'No data available'
-          });
-        }
-        return response;
-      },
-      onError: (error, { actions }) => {
-        actions.setSubmitting(false);
-        setSnack({
-          severity: 'error',
-          message: 'Failed to fetch'
-        });
-      }
-    }
-  );

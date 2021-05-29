@@ -13,7 +13,7 @@ const CreateStep = (props) => {
   const paramString = queryString.stringify(
     { ...formik.values, ...filters, ...monitorFormik.values },
     {
-      arrayFormat: 'index',
+      arrayFormat: 'bracket-separator',
       skipEmptyString: true,
       skipNull: true
     }

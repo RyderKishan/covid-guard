@@ -15,7 +15,6 @@ export const columns = [
   {
     field: 'noOfSessions',
     headerName: 'No of sessions',
-    description: 'This column has a value getter and is not sortable.',
     disableSorting: true,
     valueGetter: (row) => `${(row.sessions || []).length}`,
     align: 'center'
