@@ -18,12 +18,12 @@ const ErrorObject = async (response) => {
 };
 
 const headersForAllRequest = {
-  'Content-Type': 'application/json',
-  'x-api-key': encode(`${new Date().valueOf()}`)
+  'Content-Type': 'application/json'
 };
 
 const get = async (endpoint, headers, options = {}) => {
   const commonHeaders = {
+    'x-api-key': encode(`${new Date().valueOf()}`),
     ...headersForAllRequest
   };
   const commonOptions = {
@@ -43,6 +43,7 @@ const get = async (endpoint, headers, options = {}) => {
 
 const del = async (endpoint, headers, options = {}) => {
   const commonHeaders = {
+    'x-api-key': encode(`${new Date().valueOf()}`),
     ...headersForAllRequest
   };
   const commonOptions = {
@@ -62,6 +63,7 @@ const del = async (endpoint, headers, options = {}) => {
 
 const post = async (endpoint, body, headers, options = {}) => {
   const commonHeaders = {
+    'x-api-key': encode(`${new Date().valueOf()}`),
     ...headersForAllRequest
   };
   const commonOptions = {
@@ -82,6 +84,7 @@ const post = async (endpoint, body, headers, options = {}) => {
 
 const put = async (endpoint, body, headers, options = {}) => {
   const commonHeaders = {
+    'x-api-key': encode(`${new Date().valueOf()}`),
     ...headersForAllRequest
   };
   const commonOptions = {
