@@ -1,23 +1,27 @@
 import moment from 'moment';
 
 export const columns = [
-  { field: 'center_id', headerName: 'Center Id', align: 'center' },
-  { field: 'fee_type', headerName: 'Type', align: 'center' },
-  { field: 'district_name', headerName: 'District Name' },
-  { field: 'block_name', headerName: 'Block Name' },
-  { field: 'name', headerName: 'Center Name' },
+  { field: 'center_id', headerName: 'Center Id', alignHeader: 'center' },
+  { field: 'fee_type', headerName: 'Type', alignHeader: 'center' },
+  {
+    field: 'district_name',
+    headerName: 'District Name',
+    alignHeader: 'center'
+  },
+  { field: 'block_name', headerName: 'Block Name', alignHeader: 'center' },
+  { field: 'name', headerName: 'Center Name', alignHeader: 'center' },
   {
     field: 'pincode',
     headerName: 'Pincode',
     type: 'number',
-    align: 'center'
+    alignHeader: 'center'
   },
   {
     field: 'noOfSessions',
     headerName: 'No of sessions',
     disableSorting: true,
     valueGetter: (row) => `${(row.sessions || []).length}`,
-    align: 'center'
+    alignHeader: 'center'
   }
 ];
 

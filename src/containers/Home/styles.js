@@ -15,7 +15,7 @@ export const Paper = styled(MuiPaper)`
   & > .toolbar {
     & > .actions {
       & > button {
-        margin-right: ${({ theme }) => theme.spacing(1)}px;
+        margin-left: ${({ theme }) => theme.spacing(1)}px;
       }
       .up {
         transform: rotate(-180deg);
@@ -59,7 +59,7 @@ export const DisplaySection = styled.div`
 
 export const Center = styled.div`
   width: 100%;
-  height: 100%;
+  flex: 1;
   display: grid;
   place-content: center;
 `;

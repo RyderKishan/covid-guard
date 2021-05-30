@@ -5,8 +5,11 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import IconButton from '@material-ui/core/IconButton';
 import Tooltip from '@material-ui/core/Tooltip';
-import Chip from '@material-ui/core/Chip';
-import Collapse from '@material-ui/core/Collapse';
+import Menu from '@material-ui/core/Menu';
+import Checkbox from '@material-ui/core/Checkbox';
+import ListItemText from '@material-ui/core/ListItemText';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import Hidden from '@material-ui/core/Hidden';
@@ -22,22 +25,22 @@ import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@material-ui/icons/KeyboardArrowUp';
 import HeightIcon from '@material-ui/icons/Height';
 import LocationOnIcon from '@material-ui/icons/LocationOn';
+import SettingsIcon from '@material-ui/icons/Settings';
 
 import {
-  DailySessions,
   TablePagination,
-  SessionCard,
-  CenterDetails,
+  TableSettings,
   TableContainer,
   Center
 } from './styles';
 import { stableSort, getSorting, getFiltering, getRows } from './utils';
+import useLocalStorage from '../../hooks/useLocalStorage';
+import Sessions from '../Sessions';
 
 const paginationOptions = [10, 20, 50, 100];
 
 const Table = (props) => {
   const matches = useMediaQuery((theme) => theme.breakpoints.up('sm'));
-
   const {
     rows,
     columns,
@@ -47,11 +50,13 @@ const Table = (props) => {
     showNumbers,
     totalCount
   } = props;
+  const [selectedColumns, setColumns] = useLocalStorage('columns', {});
+  const [tablePadding, setTablePadding] = useLocalStorage('padding', 'default');
   const [modRows, setModRows] = React.useState(rows);
   const [collapsibleRows, setCollapsibleRows] = React.useState({});
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
-
+  const [anchorEl, setAnchorEl] = React.useState(null);
   const [order, setOrder] = React.useState('asc');
   const [orderBy, setOrderBy] = React.useState('calories');
   const [filter, setFilter] = React.useState({});
@@ -95,6 +100,16 @@ const Table = (props) => {
     setCollapsibleRows(expanded);
   };
 
+  const selectColumns = (col) => {
+    const newColumns = { ...selectedColumns };
+    if (newColumns[col]) {
+      newColumns[col] = false;
+    } else {
+      newColumns[col] = true;
+    }
+    setColumns(newColumns);
+  };
+
   React.useEffect(() => {
     if (initialExpand && rows && rows.length > 0) {
       handleExpandAll();
@@ -117,11 +132,35 @@ const Table = (props) => {
             <TableHead>
               <TableRow>
                 {showNumbers && (
-                  <TableCell align="center" padding="checkbox">
-                    <span>No</span>
+                  <TableCell align="center" padding={tablePadding}>
+                    <Tooltip title="Column Settings" enterDelay={100}>
+                      <IconButton
+                        aria-haspopup="true"
+                        onClick={(event) => setAnchorEl(event.currentTarget)}
+                      >
+                        <SettingsIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Menu
+                      anchorEl={anchorEl}
+                      keepMounted
+                      open={Boolean(anchorEl)}
+                      onClose={() => setAnchorEl(null)}
+                    >
+                      {columns.map((nm) => (
+                        <MenuItem
+                          key={nm.field}
+                          value={nm.field}
+                          onClick={() => selectColumns(nm.field)}
+                        >
+                          <Checkbox checked={!selectedColumns[nm.field]} />
+                          <ListItemText primary={nm.headerName} />
+                        </MenuItem>
+                      ))}
+                    </Menu>
                   </TableCell>
                 )}
-                <TableCell padding="default" align="left">
+                <TableCell padding={tablePadding} align="left">
                   <Tooltip
                     title="Expand all"
                     placement="bottom"
@@ -129,33 +168,35 @@ const Table = (props) => {
                   >
                     <IconButton
                       aria-label="expand row"
-                      size="small"
                       onClick={() => handleExpandAll()}
                     >
                       <HeightIcon />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
-                {columns.map((column) => (
-                  <TableCell
-                    key={column.field}
-                    align={column.align || 'left'}
-                    padding={column.disablePadding ? 'none' : 'default'}
-                    sortDirection={orderBy === column.field ? order : false}
-                  >
-                    {column.disableSorting ? (
-                      <span>{column.headerName}</span>
-                    ) : (
-                      <TableSortLabel
-                        active={orderBy === column.field}
-                        direction={orderBy === column.field ? order : 'asc'}
-                        onClick={createSortHandler(column.field)}
+                {columns.map(
+                  (column) =>
+                    !selectedColumns[column.field] && (
+                      <TableCell
+                        key={column.field}
+                        align={column.alignHeader || 'left'}
+                        padding={tablePadding}
+                        sortDirection={orderBy === column.field ? order : false}
                       >
-                        {column.headerName}
-                      </TableSortLabel>
-                    )}
-                  </TableCell>
-                ))}
+                        {column.disableSorting ? (
+                          <span>{column.headerName}</span>
+                        ) : (
+                          <TableSortLabel
+                            active={orderBy === column.field}
+                            direction={orderBy === column.field ? order : 'asc'}
+                            onClick={createSortHandler(column.field)}
+                          >
+                            {column.headerName}
+                          </TableSortLabel>
+                        )}
+                      </TableCell>
+                    )
+                )}
               </TableRow>
             </TableHead>
 
@@ -174,16 +215,26 @@ const Table = (props) => {
                     </Tooltip>
                   </TableCell>
                   <TableCell align="center" />
-                  {columns.map((column) => (
-                    <TableCell key={column.field} scope="row" padding="default">
-                      {!column.disableSorting && (
-                        <TextField
-                          variant="outlined"
-                          onChange={(e) => handleFilterChange(e, column.field)}
-                        />
-                      )}
-                    </TableCell>
-                  ))}
+                  {columns.map(
+                    (column) =>
+                      !selectedColumns[column.field] && (
+                        <TableCell
+                          key={column.field}
+                          scope="row"
+                          padding={tablePadding}
+                        >
+                          {!column.disableSorting && (
+                            <TextField
+                              fullWidth
+                              variant="outlined"
+                              onChange={(e) =>
+                                handleFilterChange(e, column.field)
+                              }
+                            />
+                          )}
+                        </TableCell>
+                      )
+                  )}
                   <TableCell align="center" />
                 </TableRow>
               )}
@@ -192,7 +243,7 @@ const Table = (props) => {
                   <TableCell
                     colSpan={columns.length + (showNumbers ? 2 : 1)}
                     align="center"
-                    padding="checkbox"
+                    padding={tablePadding}
                   >
                     <Typography
                       align="center"
@@ -210,14 +261,14 @@ const Table = (props) => {
                   <React.Fragment key={row.center_id}>
                     <TableRow hover key={row.id || row.center_id}>
                       {showNumbers && (
-                        <TableCell padding="checkbox" align="center">
+                        <TableCell padding={tablePadding} align="center">
                           <span>{index + 1}</span>
                         </TableCell>
                       )}
-                      <TableCell padding="default" align="center">
+                      <TableCell padding={tablePadding} align="center">
                         <IconButton
                           aria-label="expand row"
-                          size="small"
+                          size={tablePadding === 'none' ? 'small' : 'medium'}
                           onClick={() =>
                             setCollapsibleRows({
                               ...collapsibleRows,
@@ -233,24 +284,28 @@ const Table = (props) => {
                         </IconButton>
                       </TableCell>
                       {columns.map((column, cellIndex) => {
+                        if (selectedColumns[column.field]) return null;
                         const cellValue = row[column.field] || '';
                         if (column.field === 'center_id')
                           return (
                             <TableCell
                               id={`table-row-${index}-cell-${cellIndex}`}
                               key={column.field}
-                              align={column.align || 'left'}
+                              align={column.alignValue || 'left'}
                               scope="row"
-                              padding="default"
+                              padding={tablePadding}
                             >
                               <Tooltip
                                 title="Open in google maps"
                                 placement="bottom"
-                                enterDelay={100}
+                                // enterDelay={100}
                               >
                                 <IconButton
                                   aria-label="expand row"
-                                  size="small"
+                                  size={
+                                    tablePadding === 'none' ? 'small' : 'medium'
+                                  }
+                                  className="map-icon"
                                   onClick={() =>
                                     window.open(
                                       `https://www.google.co.in/maps/search/${`${row.name} ${row.block_name}`.replace(
@@ -270,9 +325,9 @@ const Table = (props) => {
                           <TableCell
                             id={`table-row-${index}-cell-${cellIndex}`}
                             key={column.field}
-                            align={column.align || 'left'}
+                            align={column.alignValue || 'left'}
                             scope="row"
-                            padding="default"
+                            padding={tablePadding}
                           >
                             <span
                               className={`data-${column.field}`}
@@ -290,42 +345,10 @@ const Table = (props) => {
                           style={{ paddingBottom: 0, paddingTop: 0 }}
                           colSpan={columns.length + (showNumbers ? 2 : 1)}
                         >
-                          <Collapse
-                            in={collapsibleRows[row.center_id]}
-                            timeout="auto"
-                            unmountOnExit
-                          >
-                            <CenterDetails>
-                              {`Address: ${row.address}`}
-                            </CenterDetails>
-                            <DailySessions>
-                              {row.sessions.map((session) => (
-                                <SessionCard key={session.session_id}>
-                                  <Chip label={session.date} />
-                                  <Chip
-                                    label={session.available_capacity}
-                                    className={
-                                      session.available_capacity > 0
-                                        ? 'available'
-                                        : 'unavailable'
-                                    }
-                                    size="small"
-                                  />
-                                  <div className="vaccine">
-                                    {session.vaccine}
-                                  </div>
-                                  <div className="age">
-                                    Age {session.min_age_limit}+
-                                  </div>
-                                  <div className="sessions">
-                                    {session.slots.map((slot) => (
-                                      <div key={slot}>{slot}</div>
-                                    ))}
-                                  </div>
-                                </SessionCard>
-                              ))}
-                            </DailySessions>
-                          </Collapse>
+                          <Sessions
+                            row={row}
+                            collapsibleRows={collapsibleRows}
+                          />
                         </TableCell>
                       </TableRow>
                     )}
@@ -343,14 +366,54 @@ const Table = (props) => {
           </Center>
         )}
       </TableContainer>
+      <Hidden smUp>
+        <TableSettings>
+          <div>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={tablePadding === 'default'}
+                  onChange={(event) =>
+                    setTablePadding(event.target.checked ? 'default' : 'none')
+                  }
+                  name="tablePadding"
+                  color="secondary"
+                />
+              }
+              label="Dense"
+            />
+          </div>
+        </TableSettings>
+      </Hidden>
       {pageable && (
         <TablePagination>
-          <div>
+          <div className="status">
             {modRows.length > 0 && (
               <Typography noWrap color="textPrimary" variant="caption">
                 {`${modRows.length} centers`}
               </Typography>
             )}
+            <Hidden xsDown>
+              <TableSettings>
+                <div>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={tablePadding === 'default'}
+                        onChange={(event) =>
+                          setTablePadding(
+                            event.target.checked ? 'default' : 'none'
+                          )
+                        }
+                        name="tablePadding"
+                        color="secondary"
+                      />
+                    }
+                    label="Dense"
+                  />
+                </div>
+              </TableSettings>
+            </Hidden>
           </div>
           <div className="actions">
             <Hidden smDown>
